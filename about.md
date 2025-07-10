@@ -1,6 +1,6 @@
 # Warning
 
-This mod (or script) might conflict with other mods, such as: (idk)
+This mod (or script) might conflict with other mods (it shouldn't and i hope it wont).
 
 I only make this to let computer do the tedious and repetitive task accurately.
 
@@ -10,4 +10,6 @@ The mod adds a button in editor pause menu (bottom-left) and ask you to select F
 
 It's better to test it in empty level.
 
-only old PsychEngine chart (pre v1.0 and older) is supported rn. might update soon or nevr
+only old PsychEngine (pre v1.0 and older) and v-slice chart is supported rn. might update soon or nevr
+
+[tutorial video](https://youtu.be/n2tuaLAaCK0?feature=shared)
