@@ -1,60 +1,22 @@
-#include "json.hpp"
-using json =  nlohmann::json;
 #include <Geode/Geode.hpp>
 #include <Geode/modify/EditorPauseLayer.hpp>
-#include <Windows.h>
-#include <commdlg.h>
 #include <fstream>
 #include <Geode/binding/SetupTriggerPopup.hpp>
 #include <math.h>
 
-std::optional<std::string> openFileDialog() {
-    char filePath[MAX_PATH] = "";
-
-    OPENFILENAMEA ofn = { 0 };
-    ofn.lStructSize = sizeof(ofn);
-    ofn.hwndOwner = nullptr;
-    ofn.lpstrFile = filePath;
-    ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = "JSON Files\0*.json\0All Files\0*.*\0";
-    ofn.nFilterIndex = 1;
-    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-    if (GetOpenFileNameA(&ofn)) {
-        return std::string(filePath);
-    } else {
-        return std::nullopt;
-    }
-}
-
-std::optional<json> loadJsonFile(const std::string& path) {
-    std::ifstream file(path);
-    if (!file.is_open()) {
-        return std::nullopt;
-    }
-
-    try {
-        json j;
-        file >> j;
-        return j;
-    } catch (const std::exception& e) {
-        return std::nullopt;
-    }
-}
-
 int grid = 30;
-float timepergrid = 0.09628343;
-float Ypos = 5025.0;
-float Xpos = 0.0;
-float noteOffset = (1.56/0.09628343)*-1;
+double timepergrid = 0.09628343;
+double Ypos = 5025.0;
+double Xpos = 0.0;
+double noteOffset = (1.56/0.09628343)*-1;
 int spawnID = 1268;
 int pickupID = 1817;
 int areaScaleID = 3008; //lol
 int itemEditID = 3619;
 
-float daTime = 0;
-float bpm = 120;
-float scroll = 1.0;
+double daTime = 0;
+double bpm = 120;
+double scroll = 1.0;
 int beat = 0;
 
 int leftG = 50;
@@ -81,6 +43,74 @@ int bfSideG = 27;
 int dadSideG = 28;
 
 using namespace geode::prelude;
+
+std::string getHighestDiff(matjson::Value data){
+	if (data["notes"].size()==3){
+		if (data["notes"].contains("hard")){
+			return "hard";
+		}else if(data["notes"].contains("normal")){
+			return "normal";
+		}else if(data["notes"].contains("easy")){
+			return "easy";
+		}else {
+			log::warn("unknown difficulty");
+			return nullptr;
+		}
+	} else if (data["notes"].size()==2){
+		if (data["notes"].contains("nightmare")){
+			return "nightmare";
+		}else if(data["notes"].contains("erect")){
+			return "erect";
+		}else {
+			log::warn("unknown difficulty");
+			return nullptr;
+		}
+	} else{
+		log::warn("custom difficulty or no difficulty?");
+		return nullptr;
+	}
+}
+
+bool validatePsychChart(matjson::Value data){
+	if (data.contains("song") && data["song"].contains("notes") && data["song"].contains("events") && data["song"].contains("bpm")){
+		return true;
+	}
+	return false;
+}
+
+bool validateVSliceChart(matjson::Value data){
+	if (data.contains("version") && data.contains("notes") && data.contains("events")){
+		return true;
+	}
+	return false;
+}
+
+bool validateVSliceMetadata(matjson::Value data){
+	if (data.contains("version") && data.contains("playData") && data.contains("timeChanges")){
+		return true;
+	}
+	return false;
+}
+
+void getData(std::function<void(matjson::Value)> onResult){
+	utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([onResult](geode::Result<std::filesystem::path, std::string>* file){
+		if (!file){
+			FLAlertLayer::create("No file selected", "Import cancelled", "OK")->show();
+			onResult(matjson::Value());
+			return;
+		}
+		auto rawData = file->unwrap();
+		auto jsonData = utils::file::readJson(rawData);
+		if (!jsonData) {
+			FLAlertLayer::create("Invalid File Type", "This ain't json file. Import cancelled", "OK")->show();
+			log::warn("this aint json");
+			onResult(matjson::Value());
+			return;
+		}
+		log::info("ok");
+		onResult(jsonData.unwrap());
+	});
+}
 
 int getTargetGroup(int num){
 	switch (num){
@@ -109,20 +139,20 @@ int getTargetID1(int num){
 	}
 }
 
-void addNote(LevelEditorLayer* editor, float daX, float daY, float dur){
+void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0){
 	auto ui = editor->m_editorUI;
-	float offset = 0;
-	float objX = ((noteOffset*grid)+(daX/1000*(grid/timepergrid)))+Xpos;
-	float objY = (((daY+offset)*grid)+Ypos);
-	CCPoint pos = {objX,objY};
+	double offset = 0;
+	double objX = ((noteOffset*grid)+(daX/1000*(grid/timepergrid)))+Xpos;
+	double objY = (((daY+offset)*grid)+Ypos);
+	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
 	auto trigger = dynamic_cast<EffectGameObject*>(obj);
 	if (trigger){
 		trigger->m_targetGroupID = getTargetGroup(daY);
 	}
-	float obj1X = (noteOffset*grid)+(daX/1000*(grid/timepergrid))-(1.0f)+Xpos;
-	float obj1Y = (((daY+offset)*grid)+Ypos);
-	CCPoint pos1 = {obj1X,obj1Y};
+	double obj1X = (noteOffset*grid)+(daX/1000*(grid/timepergrid))-(1.0f)+Xpos;
+	double obj1Y = (((daY+offset)*grid)+Ypos);
+	CCPoint pos1 = {(float)obj1X,(float)obj1Y};
 	auto obj1 = ui->createObject(itemEditID,pos1);
 	auto trigger1 = dynamic_cast<ItemTriggerGameObject*>(obj1);
 	if (trigger1){
@@ -141,12 +171,12 @@ void addNote(LevelEditorLayer* editor, float daX, float daY, float dur){
 	// selection->addObject(obj1);
 }
 
-void addSpawn(LevelEditorLayer* editor, float daX, float daY, int group, bool parent = false){
+void addSpawn(LevelEditorLayer* editor, double daX, double daY, int group, bool parent = false){
 	auto ui = editor->m_editorUI;
 
-	float objX = (daX/1000*(grid/timepergrid))+Xpos;
-	float objY = ((daY*grid)+Ypos);
-	CCPoint pos = {objX,objY};
+	double objX = (daX/1000*(grid/timepergrid))+Xpos;
+	double objY = ((daY*grid)+Ypos);
+	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
 	auto trigger = dynamic_cast<EffectGameObject*>(obj);
 	if (trigger){
@@ -159,13 +189,13 @@ void addSpawn(LevelEditorLayer* editor, float daX, float daY, int group, bool pa
 
 }
 
-void addAreaScale(LevelEditorLayer* editor, float daX, float daY, int target, int center, float length, int daeffectID, bool early = false){
+void addAreaScale(LevelEditorLayer* editor, double daX, double daY, int target, int center, double length, int daeffectID, bool early = false){
 	auto ui = editor->m_editorUI;
-	float doffset = (early == true)?(noteOffset*grid):0.0;
+	double doffset = (early == true)?(noteOffset*grid):0.0;
 	int daLength = ceilf(length*30);
-	float dX = doffset+(daX/1000*(grid/timepergrid))+Xpos;
-	float dY = (((daY+1)*grid)+Ypos);
-	CCPoint daPos = {dX,dY};
+	double dX = doffset+(daX/1000*(grid/timepergrid))+Xpos;
+	double dY = (((daY+1)*grid)+Ypos);
+	CCPoint daPos = {(float)dX,(float)dY};
 	auto daObj = ui->createObject(areaScaleID,daPos);
 	auto daAreaTrigger = dynamic_cast<EnterEffectObject*>(daObj);
 	if (daAreaTrigger){
@@ -190,20 +220,20 @@ void addAreaScale(LevelEditorLayer* editor, float daX, float daY, int target, in
 	// selection->addObject(daObj);
 }
 
-void addBPMChanger(LevelEditorLayer* editor, float daX, float daY, bool early = false){
+void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early = false){
 	auto ui = editor->m_editorUI;
-	float doffset = (early == true)?(noteOffset*grid):0.0;
-	float objX = doffset+(daX/1000*(grid/timepergrid))+Xpos;
-	float objY = ((daY*grid)+Ypos);
-	CCPoint pos = {objX,objY};
+	double doffset = (early == true)?(noteOffset*grid):0.0;
+	double objX = doffset+(daX/1000*(grid/timepergrid))+Xpos;
+	double objY = ((daY*grid)+Ypos);
+	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
 	auto trigger = dynamic_cast<EffectGameObject*>(obj);
 	if (trigger){
 		trigger->m_targetGroupID = 396;
 	}
-	float obj1X = doffset+(daX/1000*(grid/timepergrid))-(1.0f)+Xpos;
-	float obj1Y = ((daY*grid)+Ypos);
-	CCPoint pos1 = {obj1X,obj1Y};
+	double obj1X = doffset+(daX/1000*(grid/timepergrid))-(1.0f)+Xpos;
+	double obj1Y = ((daY*grid)+Ypos);
+	CCPoint pos1 = {(float)obj1X,(float)obj1Y};
 	auto obj1 = ui->createObject(itemEditID,pos1);
 	auto trigger1 = dynamic_cast<ItemTriggerGameObject*>(obj1);
 	if (trigger1){
@@ -215,10 +245,10 @@ void addBPMChanger(LevelEditorLayer* editor, float daX, float daY, bool early = 
 	if (trigger3){
 		trigger3->m_targetGroupID = 2;
 	}
-	float length = ((60/bpm/4)/0.1538461538461538)+0.1;
-	float obj2X = doffset+(daX/1000*(grid/timepergrid))+Xpos;
-	float obj2Y = (((daY+1)*grid)+Ypos);
-	CCPoint pos2 = {obj2X,obj2Y};
+	double length = ((60/bpm/4)/0.1538461538461538)+0.1;
+	double obj2X = doffset+(daX/1000*(grid/timepergrid))+Xpos;
+	double obj2Y = (((daY+1)*grid)+Ypos);
+	CCPoint pos2 = {(float)obj2X,(float)obj2Y};
 	auto obj2 = ui->createObject(areaScaleID,pos2);
 	auto trigger4 = dynamic_cast<EnterEffectObject*>(obj2);
 	if (trigger4){
@@ -252,19 +282,19 @@ void addBPMChanger(LevelEditorLayer* editor, float daX, float daY, bool early = 
 	// selection->addObject(obj1);
 }
 
-void addScrollSpeed(LevelEditorLayer* editor, float daX, float daY, float daScroll,float daDur,bool early = false){
+void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daScroll,double daDur,bool early = false){
 	auto ui = editor->m_editorUI;
 
-	float doffset = (early == true)?(noteOffset*grid):0.0;
-	float resultscroll = scroll*daScroll;
-	float length = ((60/bpm/4)/0.1538461538461538)+0.1;
-	float obj2X = doffset+(daX/1000*(grid/timepergrid))+Xpos;
-	float obj2Y = (((daY)*grid)+Ypos);
-	CCPoint pos2 = {obj2X,obj2Y};
+	double doffset = (early == true)?(noteOffset*grid):0.0;
+	double resultscroll = scroll*daScroll;
+	double length = ((60/bpm/4)/0.1538461538461538)+0.1;
+	double obj2X = doffset+(daX/1000*(grid/timepergrid))+Xpos;
+	double obj2Y = (((daY)*grid)+Ypos);
+	CCPoint pos2 = {(float)obj2X,(float)obj2Y};
 	auto obj2 = ui->createObject(3011,pos2);
 	auto trigger4 = dynamic_cast<EnterEffectObject*>(obj2);
 	if (trigger4){
-		trigger4->m_moveDistance = (std::max(1.0f,resultscroll)-1.0)*300;
+		trigger4->m_moveDistance = (std::max((double)1.0,resultscroll)-1.0)*300;
 		trigger4->m_duration = daDur;
 		trigger4->m_useEffectID = true;
 		trigger4->m_targetGroupID = 29; //bruh it should be m_effectID
@@ -272,7 +302,7 @@ void addScrollSpeed(LevelEditorLayer* editor, float daX, float daY, float daScro
 	auto obj3 = ui->createObject(3011,pos2);
 	auto trigger5 = dynamic_cast<EnterEffectObject*>(obj3);
 	if (trigger5){
-		trigger5->m_moveDistance = (std::max(1.0f,resultscroll)-1.0)*300;
+		trigger5->m_moveDistance = (std::max((double)1.0,resultscroll)-1.0)*300;
 		trigger5->m_duration = daDur;
 		trigger5->m_useEffectID = true;
 		trigger5->m_targetGroupID = 30;
@@ -280,7 +310,7 @@ void addScrollSpeed(LevelEditorLayer* editor, float daX, float daY, float daScro
 	auto obj4 = ui->createObject(3013,pos2);
 	auto trigger6 = dynamic_cast<EnterEffectObject*>(obj4);
 	if (trigger6){
-		trigger6->m_areaScaleY = (std::max(1.0f,resultscroll));
+		trigger6->m_areaScaleY = (std::max((double)1.0,resultscroll));
 		trigger6->m_areaScaleX = 1.0;
 		trigger6->m_duration = daDur;
 		trigger6->m_useEffectID = true;
@@ -291,21 +321,7 @@ void addScrollSpeed(LevelEditorLayer* editor, float daX, float daY, float daScro
 	// selection->addObject(obj1);
 }
 
-bool validatePsychChart(const json& data){
-	if (data.contains("song") && data["song"].contains("notes") && data["song"].contains("events") && data["song"].contains("bpm")){
-		return true;
-	}
-	return false;
-}
-
-bool validateVSliceChart(const json& data){
-	if (data.contains("version") && data.contains("notes") && data.contains("events")){
-		return true;
-	}
-	return false;
-}
-
-void importChart(LevelEditorLayer* editor,const json& data){
+void importChart(LevelEditorLayer* editor,matjson::Value data){
 	if (!editor){
 		log::warn("editor gone??");
 		return;
@@ -317,8 +333,8 @@ void importChart(LevelEditorLayer* editor,const json& data){
 	auto ui = editor->m_editorUI;
 	auto objects = ui->getSelectedObjects();
 	if (objects && objects->count() > 0){
-		float minX = -4000.0;
-		float minY = -4000.0;
+		double minX = -4000.0;
+		double minY = -4000.0;
 		for (int i = 0; i < objects->count(); ++i){
 			auto obj = static_cast<GameObject*>(objects->objectAtIndex(i));
 			CCPoint daPos = obj->getPosition();
@@ -337,15 +353,16 @@ void importChart(LevelEditorLayer* editor,const json& data){
 		if (data["song"].contains("format") && data["song"]["format"] == "psych_v1_convert"){
 			converted = true;
 		}
-		scroll = data["song"]["speed"];
-		bpm = data["song"]["bpm"];
+		// log::info("{}",data["song"].dump());
+		scroll = data["song"]["speed"].asDouble().unwrap();
+		bpm = data["song"]["bpm"].asDouble().unwrap();
 		addBPMChanger(editor,0.0,20.0f,true);
 		addScrollSpeed(editor,0.0,22.0,1.0,0.0,true);
 		addSpawn(editor,0.0,23.0,741,true);
-		for (const auto& [a, b]:data["song"]["notes"].items()){
-			for (const auto& [c, d]:b.items()){
+		for (const auto& [a, b]:data["song"]["notes"]){
+			for (const auto& [c, d]:b){
 				if (c == "changeBPM" && d == true) {
-					bpm = b["bpm"];
+					bpm = b["bpm"].asDouble().unwrap();
 					addBPMChanger(editor,daTime,20.0f);
 				}else if (c == "mustHitSection"){
 					if (d == true){
@@ -354,20 +371,20 @@ void importChart(LevelEditorLayer* editor,const json& data){
 						addSpawn(editor,daTime,16.0f,dadSideG);
 					}
 				}else if (c == "sectionNotes"){
-					for (const auto& [e,f]:d.items()){
-						if (b["mustHitSection"] || converted){
-							addNote(editor,f[0],f[1],f[2]);
+					for (const auto& [e,f]:d){
+						if (b["mustHitSection"].asBool().unwrap() || converted){
+							addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap(),f[2].asDouble().unwrap());
 						}else{
 							if (f[1]<4){
-								addNote(editor,f[0],f[1]+4,f[2]);
+								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()+4,f[2].asDouble().unwrap());
 							} else {
-								addNote(editor,f[0],f[1]-4,f[2]);
+								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()-4,f[2].asDouble().unwrap());
 							}
 						}
 					}
 				}
 			}
-			int section = (b.contains("sectionBeats")) ? b["sectionBeats"].get<int>() : b["lengthInSteps"].get<int>()/4;
+			int section = (b.contains("sectionBeats")) ? b["sectionBeats"].asInt().unwrap() : b["lengthInSteps"].asInt().unwrap()/4;
 			for (int i = 0;i < section;++i){
 				if (beat%4==0){
 					addSpawn(editor,daTime+(i*60/bpm*1000),17.0f,26);
@@ -382,13 +399,13 @@ void importChart(LevelEditorLayer* editor,const json& data){
 			}
 			daTime = daTime + (60/bpm)*section*1000;
 		}
-		if (data["song"].contains("events") && !data["song"]["events"].empty()){
-			for (const auto& [a,b]:data["song"]["events"].items()){
-				float thisTime = b[0];
-				for (const auto& [c,d]:b[1].items()){
+		if (data["song"].contains("events") && data["song"]["events"].isArray()){
+			for (const auto& [a,b]:data["song"]["events"]){
+				double thisTime = b[0].asDouble().unwrap();
+				for (const auto& [c,d]:b[1]){
 					if (d[0] == "Change Scroll Speed"){
-						float daScroll = (!d[1].empty())?std::stof(d[1].get<std::string>()):1.0;
-						float daDur = (!d[2].empty() && !d[2].get<std::string>().empty())?std::stof(d[2].get<std::string>()):0.0;
+						double daScroll = (!d[1].isNull())?std::stod(d[1].asString().unwrap()):1.0;
+						double daDur = (!d[2].isNull()&&!d[2].asString().unwrap().empty())?std::stod(d[2].asString().unwrap()):0.0;
 						addScrollSpeed(editor,thisTime,22.0,daScroll,daDur);
 					} else if (d[0] == "Add Camera Zoom"){
 						addSpawn(editor,thisTime,17.0f,26);
@@ -398,11 +415,41 @@ void importChart(LevelEditorLayer* editor,const json& data){
 		}
 		editor->updateEditor(0.0f);
 	}else if (validateVSliceChart(data)) {
-		//new chart from vanilla fnf
-		FLAlertLayer::create("VSlice Unsupported", "Unfortunately due to my lack knowledge of C++ and Geode Modding in general, i cannot import this type of chart. maybe in the future when ive learned more about geode.", "OK")->show();
-		// for (const auto& [key, value]:data.items()){
-		// 	log::info("key {} data {}", key, value.dump());
-		// }
+		//vslice
+		getData([data,editor](matjson::Value metadata){
+			if (!metadata.isNull() && metadata.size()>0 && validateVSliceMetadata(metadata)){
+				std::string difficulty = getHighestDiff(data);
+				scroll = data["scrollSpeed"][difficulty].asDouble().unwrap();
+				bpm = metadata["timeChanges"][0]["bpm"].asDouble().unwrap();
+				double lastNote = data["notes"][difficulty][data["notes"][difficulty].size()-1]["t"].asDouble().unwrap();
+				addBPMChanger(editor,0.0,20.0f,true);
+				addScrollSpeed(editor,0.0,22.0,1.0,0.0,true);
+				addSpawn(editor,0.0,23.0,741,true);
+				for (const auto&[a,b]:data["notes"][difficulty]){
+					addNote(editor,b["t"].asDouble().unwrap(),b["d"].asInt().unwrap(),(b.contains("l")?b["l"].asDouble().unwrap():(double)0.0));
+				}
+				for (const auto&[a,b]:data["events"]){
+					auto event = b["e"].asString().unwrap();
+					double daTime = b["t"].asDouble().unwrap();
+					if (event == "FocusCamera"){
+						if (b["v"]["char"].asInt().unwrap() == 0){
+							addSpawn(editor,daTime,15.0f,bfSideG);
+						}else if (b["v"]["char"].asInt().unwrap() == 1){
+							addSpawn(editor,daTime,16.0f,dadSideG);
+						}
+					}
+				}
+				for (double dTime = 0.0;dTime<lastNote;dTime = dTime + ((60/bpm)*4000)){
+					addSpawn(editor,dTime,17.0f,26);
+				}
+				for (double dTime = 0.0;dTime<lastNote;dTime = dTime + ((60/bpm)*2000)){
+					addSpawn(editor,dTime,18.0f,945);
+				}
+				for (double dTime = 0.0;dTime<lastNote;dTime = dTime + ((60/bpm)*1000)){
+					addSpawn(editor,dTime,19.0f,1224);
+				}
+			}
+		});
 		return;
 	}else {
 		FLAlertLayer::create("Invalid Chart Type", "Unknown chart from unknown engine? or maybe its not even an FNF chart file.", "OK")->show();
@@ -442,12 +489,13 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 	}
 
 	void buttonPress(CCObject*){
-		auto file = openFileDialog();
+		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([](geode::Result<std::filesystem::path, std::string>* file){
 		if (!file){
 			log::info("nvm");
 			return;
 		}
-		auto jsonData = loadJsonFile(file.value());
+		auto rawData = file->unwrap();
+		auto jsonData = utils::file::readJson(rawData);
 		if (!jsonData) {
 			FLAlertLayer::create("Invalid File Type", "This ain't json file. (ig)", "OK")->show();
 			log::warn("this aint json");
@@ -455,11 +503,12 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		}
 		log::info("ok");
 		auto editor = GameManager::sharedState()->getEditorLayer();
-		importChart(editor,jsonData);
+		importChart(editor,jsonData.unwrap());
 		//initiateInterface();
+		});
 	}
 
-	void initiateInterface(){
+	void initiateInterface(){// not finished yet
 		auto root = CCDirector::sharedDirector()->getRunningScene();
 		auto screenDmnsn = CCDirector::sharedDirector()->getWinSize();
 
