@@ -1,8 +1,18 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/EditorPauseLayer.hpp>
 #include <fstream>
+#include <iostream>
 #include <Geode/binding/SetupTriggerPopup.hpp>
 #include <math.h>
+#include <regex>
+
+struct mdNoteData
+{
+	int targetG;
+	int daY;
+	bool start;
+};
+
 
 int grid = 30;
 double timepergrid = 0.09628343;
@@ -29,6 +39,11 @@ int downHold = 301;
 int upHold = 302;
 int rightHold = 303;
 
+int leftType = 308;
+int downType = 309;
+int upType = 310;
+int rightType = 311;
+
 int dadleftG = 700;
 int daddownG = 710;
 int dadupG = 720;
@@ -38,6 +53,11 @@ int dadleftHold = 304;
 int daddownHold = 305;
 int dadupHold = 306;
 int dadrightHold = 307;
+
+int dadleftType = 312;
+int daddownType = 313;
+int dadupType = 314;
+int dadrightType = 315;
 
 int bfSideG = 27;
 int dadSideG = 28;
@@ -92,6 +112,17 @@ bool validateVSliceMetadata(matjson::Value data){
 	return false;
 }
 
+int checkNoteType(matjson::Value note,int origin){
+	int final = origin;
+	if (!note[3].isNull()&&note[3].isString()){
+		std::string datype = note[3].asString().unwrap();
+		if (datype == "mimi"){
+			final = 4;
+		}
+	}
+	return final;
+}
+
 void getData(std::function<void(matjson::Value)> onResult){
 	utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([onResult](geode::Result<std::filesystem::path, std::string>* file){
 		if (!file){
@@ -139,7 +170,31 @@ int getTargetID1(int num){
 	}
 }
 
-void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0){
+int getTargetID2(int num){
+	switch (num){
+		case 0: return leftType;
+		case 1: return downType;
+		case 2: return upType;
+		case 3: return rightType;
+		case 4: return dadleftType;
+		case 5: return daddownType;
+		case 6: return dadupType;
+		case 7: return dadrightType;
+		default: return 0;
+	}
+}
+
+mdNoteData mdGetNoteThingIDK(std::string daType){
+	int daTarget = 0;
+	int dY = 0;
+	bool start = false;
+	if (daType == "songStart"){
+		start = true;
+	}
+	return {daTarget,dY,start};
+}
+
+void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0, int daType = 0, int targetG = 0, int targetDur = 0, int targetType = 0){
 	auto ui = editor->m_editorUI;
 	double offset = 0;
 	double objX = ((noteOffset*grid)+(daX/1000*(grid/timepergrid)))+Xpos;
@@ -148,7 +203,7 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0){
 	auto obj = ui->createObject(spawnID,pos);
 	auto trigger = dynamic_cast<EffectGameObject*>(obj);
 	if (trigger){
-		trigger->m_targetGroupID = getTargetGroup(daY);
+		trigger->m_targetGroupID = (targetG!=0)?targetG:getTargetGroup(daY);
 	}
 	double obj1X = (noteOffset*grid)+(daX/1000*(grid/timepergrid))-(1.0f)+Xpos;
 	double obj1Y = (((daY+offset)*grid)+Ypos);
@@ -159,10 +214,16 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0){
 		trigger1->m_mod1 = dur;
 		trigger1->m_targetItemMode = 2;
 		trigger1->m_resultType3 = 2;
+		trigger1->m_targetGroupID = (targetDur!=0)?targetDur:getTargetID1(daY);
 	}
-	auto trigger3 = dynamic_cast<EffectGameObject*>(obj1);
-	if (trigger3){
-		trigger3->m_targetGroupID = getTargetID1(daY);
+
+	auto obj2 = ui->createObject(itemEditID,pos1);
+	auto trigger2 = dynamic_cast<ItemTriggerGameObject*>(obj2);
+	if (trigger2){
+		trigger2->m_mod1 = daType;
+		trigger2->m_targetItemMode = 1;
+		trigger2->m_resultType3 = 1;
+		trigger2->m_targetGroupID = (targetType!=0)?targetType:getTargetID2(daY);
 	}
 
 	editor->updateObjectLabel(obj);
@@ -321,7 +382,7 @@ void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daS
 	// selection->addObject(obj1);
 }
 
-void importChart(LevelEditorLayer* editor,matjson::Value data){
+void fnfChart(LevelEditorLayer* editor,matjson::Value data){
 	if (!editor){
 		log::warn("editor gone??");
 		return;
@@ -345,7 +406,7 @@ void importChart(LevelEditorLayer* editor,matjson::Value data){
 		Xpos = minX;
 		// spawnPos.setPoint(minX,minY);
 	}
-
+	noteOffset = (1.56/0.09628343)*-1;
 	daTime = 0.0;
 	if (validatePsychChart(data)){
 		//old chart pre v-slice or psychEngine
@@ -372,13 +433,17 @@ void importChart(LevelEditorLayer* editor,matjson::Value data){
 					}
 				}else if (c == "sectionNotes"){
 					for (const auto& [e,f]:d){
+						int daType = ((!b["altAnim"].isNull()&&b["altAnim"].isBool()&&b["altAnim"].asBool().unwrap())||(!f[3].isNull()&&f[3].isString()&&f[3].asString().unwrap()=="Alt Animation"))?1:0;
+						daType = ((!b["gfSection"].isNull()&&b["gfSection"].isBool()&&b["gfSection"].asBool().unwrap())||(!f[3].isNull()&&f[3].isString()&&f[3].asString().unwrap()=="GF Sing"))?daType+2:daType;
+						//additional check cuz custom notetype
+						daType = checkNoteType(f,daType);
 						if (b["mustHitSection"].asBool().unwrap() || converted){
-							addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap(),f[2].asDouble().unwrap());
+							addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap(),f[2].asDouble().unwrap(),daType);
 						}else{
 							if (f[1]<4){
-								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()+4,f[2].asDouble().unwrap());
+								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()+4,f[2].asDouble().unwrap(),daType);
 							} else {
-								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()-4,f[2].asDouble().unwrap());
+								addNote(editor,f[0].asDouble().unwrap(),f[1].asDouble().unwrap()-4,f[2].asDouble().unwrap(),daType);
 							}
 						}
 					}
@@ -458,6 +523,82 @@ void importChart(LevelEditorLayer* editor,matjson::Value data){
 	}
 }
 
+void tempMuseDashChart(LevelEditorLayer* editor, std::string rawData){
+	if (!editor){
+		log::warn("editor gone??");
+		return;
+	}
+	std::istringstream stream(rawData);
+	std::string line;
+	std::regex pattern(R"(^(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})$)");
+	std::smatch match;
+	double time = -1;
+	double dur = -1;
+	noteOffset = (1.0591177/timepergrid)*-1;
+
+	Ypos = 5025.0f;
+	Xpos = 0.0f;
+	auto ui = editor->m_editorUI;
+	auto objects = ui->getSelectedObjects();
+	if (objects && objects->count() > 0){
+		double minX = -4000.0;
+		double minY = -4000.0;
+		for (int i = 0; i < objects->count(); ++i){
+			auto obj = static_cast<GameObject*>(objects->objectAtIndex(i));
+			CCPoint daPos = obj->getPosition();
+			minX = (daPos.x>minX)?daPos.x:minX;
+			minY = (daPos.y>minY)?daPos.y:minY;
+		}
+		Ypos = minY;
+		Xpos = minX;
+	}
+
+	while (std::getline(stream,line)){
+		log::info("{}",line);
+		// if (time<0&&std::regex_match(line,match,pattern)){
+		if (!line.empty() && line.back() == '\r') line.pop_back();
+		if (time<0){
+			std::regex_match(line,match,pattern);
+			log::info("{}",match.size());
+			if (match.size()<1){
+				continue;
+			}
+			time = (std::stod(match[1])*3600000)+(std::stod(match[2])*60000)+(std::stod(match[3])*1000)+(std::stod(match[4])*1);
+			double end = (std::stod(match[5])*3600000)+(std::stod(match[6])*60000)+(std::stod(match[7])*1000)+(std::stod(match[8])*1);
+			dur = end-time;
+		} else if (time>=0){
+			mdNoteData result = mdGetNoteThingIDK(line);
+			if (result.start == true){
+				addSpawn(editor, 0, 0,0,true);
+			} else {
+				addNote(editor,time,result.daY,dur,0,9891);
+			}
+			time = -1;
+			dur = -1;
+		}
+	}
+}
+
+void initiateInterface(LevelEditorLayer* editor){// not finished yet
+	auto root = CCDirector::sharedDirector()->getRunningScene();
+	auto screenDmnsn = CCDirector::sharedDirector()->getWinSize();
+
+	auto daMenu = CCMenu::create();
+	daMenu->setID("menu-container"_spr);
+	daMenu->setPosition(screenDmnsn*0);
+	daMenu->setTouchPriority(-504);
+	root->addChild(daMenu,106);
+
+	auto blacktransp = CCLayerColor::create(ccc4(0,0,0,128));
+	blacktransp->setID("bg"_spr);
+	daMenu->addChild(blacktransp,-10);
+
+	auto daLayer = CCLayer::create();
+	daLayer->setID("layer"_spr);
+	daMenu->addChild(daLayer);
+	
+}
+
 class $modify(editedPauseLayer,EditorPauseLayer) {
 	bool init(LevelEditorLayer* p0) {
 		if (!EditorPauseLayer::init(p0)) {
@@ -466,7 +607,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		
 		auto actionsButtons = this->getChildByID("actions-menu");
 		// @geode-ignore(unknown-resource)
-		auto topSprite = CCSprite::createWithSpriteFrameName("GJ_button_04-uhd.png");
+		auto topSprite = CCSprite::createWithSpriteFrameName("GJ_button_04.png");
 		auto sprite = ButtonSprite::create(
 			"Import Chart",
 			40,
@@ -489,47 +630,30 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 	}
 
 	void buttonPress(CCObject*){
-		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([](geode::Result<std::filesystem::path, std::string>* file){
+		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([this](geode::Result<std::filesystem::path, std::string>* file){
 		if (!file){
 			log::info("nvm");
 			return;
 		}
-		auto rawData = file->unwrap();
-		auto jsonData = utils::file::readJson(rawData);
-		if (!jsonData) {
-			FLAlertLayer::create("Invalid File Type", "This ain't json file. (ig)", "OK")->show();
-			log::warn("this aint json");
-			return;
-		}
-		log::info("ok");
+		auto filePath = file->unwrap();
+		std::string ext = (filePath.has_extension())?filePath.extension().string() : "";
+		
+		// auto jsonData = utils::file::readJson(rawData);
+		// if (!jsonData) {
+		// 
+		// }
+		log::info("{}",ext);
 		auto editor = GameManager::sharedState()->getEditorLayer();
-		importChart(editor,jsonData.unwrap());
-		//initiateInterface();
-		});
-	}
-
-	void initiateInterface(){// not finished yet
-		auto root = CCDirector::sharedDirector()->getRunningScene();
-		auto screenDmnsn = CCDirector::sharedDirector()->getWinSize();
-
-		auto daMenu = CCMenu::create();
-		daMenu->setID("layer-container"_spr);
-		daMenu->setPosition(screenDmnsn/2);
-		daMenu->setTouchPriority(-504);
-		root->addChild(daMenu,106);
-
-		auto blacktransp = CCLayerColor::create(ccc4(0,0,0,128));
-		blacktransp->setID("bg"_spr);
-		daMenu->addChild(blacktransp,-10);
-
-		// @geode-ignore(unknown-resource)
-		auto bg1 = CCScale9Sprite::createWithSpriteFrameName("GJ_square01.png");
-		if (!bg1){
-			log::warn("the bg tweakin");
+		if (ext == ".json"){
+			fnfChart(editor,utils::file::readJson(filePath).unwrap());
+		} else if (ext == ".srt"||ext == ".txt"){
+			tempMuseDashChart(editor,utils::file::readString(filePath).unwrap());
+		} else {
+			FLAlertLayer::create("Invalid File Type", "This file isnt supported. (ig)", "OK")->show();
+			log::warn("this aint supported");
 			return;
 		}
-		bg1->setContentSize({800.f,600.f});
-		bg1->setID("containerbg1"_spr);
-		daMenu->addChild(bg1,-10);
+		// initiateInterface(editor);
+		});
 	}
 };
