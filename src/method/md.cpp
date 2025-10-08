@@ -18,51 +18,30 @@ std::string convertStageType(std::string originalUid){
 note_data getNoteData(std::string daUid){
 	std::string thisUid = daUid;
 	for (const auto& a : note_uids){// for specific stage/boss bcs each ofthem has different bms code
-		if (a.note_uid==thisUid){
+		if (a.ibms_id==thisUid){
 			return a;
 		}
 	}
-	if (thisUid.substr(0,2)=="00"){return{};}// prevents universal (00)id to be checked
-	thisUid = convertStageType(thisUid);
-	for (const auto& a : note_uids){
-		if (a.note_uid==thisUid){
-			return a;
-		}
-	}
+	// if (thisUid.substr(0,2)=="00"){return{};}// prevents universal (00)id to be checked
+	// thisUid = convertStageType(thisUid);
+	// for (const auto& a : note_uids){
+	// 	if (a.note_uid==thisUid){
+	// 		return a;
+	// 	}
+	// }
 	return {};
 }
 
-void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
-	auto ui = editor->m_editorUI;
-
-	if (data["Config"]["note_uid"].isNull()){return;}
-	if (data["isLongPressing"].asBool().unwrap()||data["isLongPressEnd"].asBool().unwrap()){return;}
-
-	double daX = data["Config"]["time"].asDouble().unwrap();
-	double daY = (data["Config"]["pathway"].asInt().unwrap()==0)?0:1;
-	double daDur = data["Config"]["length"].asDouble().unwrap();
-	std::string suid = data["Config"]["note_uid"].asString().unwrap();
-
-	note_data thisNote = getNoteData(suid);
-	objectsData* noteObject = thisNote.useObjects;
-
-	if (thisNote.note_uid.empty()) {return;}
-
-	double offset = 0;
-	double objX = ((noteOffset*grid)+(daX/1*(grid/timepergrid)))+Xpos;
-	double objY = (((daY+offset)*grid)+Ypos);
-	CCPoint pos = {(float)objX,(float)objY};
-	auto obj = ui->createObject(spawnID,pos);
-
+void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 	bool found = false;
 
-	for (int i = 0;i<noteObject->groups.size();i++){
-		if (!noteObject->groups[i].lastUsed||
-			((daX)-(noteObject->groups[i].lastUsed)>2.1&&
-			(daX)-(noteObject->groups[i].lastUsed+noteObject->groups[i].dur)>2.1)){
-			noteObject->index = i;
-			noteObject->groups[i].lastUsed = daX;
-			noteObject->groups[i].dur = daDur;
+	for (int i = 0;i<daObjects->groups.size();i++){
+		if (!daObjects->groups[i].lastUsed||
+			((theX)-(daObjects->groups[i].lastUsed)>2.1&&
+			(theX)-(daObjects->groups[i].lastUsed+daObjects->groups[i].dur)>2.1)){
+			daObjects->index = i;
+			daObjects->groups[i].lastUsed = theX;
+			daObjects->groups[i].dur = theDur;
 			found = true;
 			break;
 		}
@@ -72,25 +51,58 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		overflow = true;
 		bool foundSimilar = false;
 		for (int i=0;i<overflowObjects.size();i++){
-			if (overflowObjects[i]==noteObject->groups[0].group){
+			if (overflowObjects[i]==daObjects->groups[0].group){
 				foundSimilar = true;
 				break;
 			}
 		}
 		if (!foundSimilar){
-			overflowObjects.push_back(noteObject->groups[0].group);
+			overflowObjects.push_back(daObjects->groups[0].group);
 		}
 	}
+}
 
-	if (thisNote.noteType==4){// normal masher and boss masher for now
+void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
+	auto ui = editor->m_editorUI;
+
+	if (data["note"]["ibms_id"].isNull()){return;}
+	if (data["isLongPressing"].asBool().unwrap()||data["isLongPressEnd"].asBool().unwrap()){return;}
+
+	double daX = data["config"]["time"].asDouble().unwrap();
+	double daY = data["note"]["pathway"].asInt().unwrap();
+	double daDur = data["config"]["length"].asDouble().unwrap();
+	std::string ibms_id = data["note"]["ibms_id"].asString().unwrap();
+
+	note_data thisNote = getNoteData(ibms_id);
+
+	if (thisNote.ibms_id.empty()) {return;}
+
+	double thisoffset = noteOffset;
+	if (thisNote.noteType>=50){// non interactable/event stuff
+		thisoffset = 0;
+	}
+
+	double objX = ((thisoffset*grid)+(daX/1*(grid/timepergrid)))+Xpos;
+	double objY = ((daY*grid)+Ypos);
+	CCPoint pos = {(float)objX,(float)objY};
+	auto obj = ui->createObject(spawnID,pos);
+
+	if (thisNote.spawnGroup==179){// masher
+		objectsData* noteObject = thisNote.objDown;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
+			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
-			//{5,5,(daY==0)?66:67,0},
-			//{6,6,(daY==0)?99:97,0},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0},
+			{4,4,curPathway,0},
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
 
@@ -109,18 +121,28 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			trigger0->m_resultType3 = 2;
 			trigger0->m_targetGroupID = noteObject->groups[noteObject->index].center;
 		}
+
 		return;
 	}
 
-	if (thisNote.noteType==16){// raider
+	if (thisNote.spawnGroup==144){// hammer
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
+			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
+			{4,4,curPathway,0},
 			{5,5,(daY==0)?66:67,0},
 			{6,6,(daY==0)?99:97,0},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0},
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
 
@@ -132,50 +154,35 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		return;
 	}
 
-	if (thisNote.noteType==15){// hammer
-		std::vector<ChanceObject> thatRemap = {
+	if (thisNote.spawnGroup==104){// hold
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		objectsData* secondObjects = (daY==0)?thisNote.endNoteDown:thisNote.endNoteUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+
+		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
+			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
+			{4,4,curPathway,0},
 			{5,5,(daY==0)?66:67,0},
 			{6,6,(daY==0)?99:97,0},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0},
-			{41,41,thisNote.sound,0}
-		};
-
-		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj);
-		if (trigger2){
-			trigger2->m_targetGroupID = thisNote.spawnGroup;
-			trigger2->m_remapObjects = thatRemap;
-		}
-
-		return;
-	}
-
-	if (thisNote.noteType==2){// hold note
-
-		objectsData* secondObjects = thisNote.endNote;
-
-		std::vector<ChanceObject> anotherRemap = {
-			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
-			{3,3,noteObject->groups[noteObject->index].center,0},
-			{4,4,noteObject->groups[noteObject->index].group,0},
-			{5,5,(daY==0)?66:67,0},
-			{6,6,(daY==0)?99:97,0},
-			{7,7,(daY==0)?10:11,0},
+			{7,7,(daY==0)?32:33,0},
 			{8,8,noteObject->groups[noteObject->index].center,0},
 			{9,9,secondObjects->groups[noteObject->index].group,0},
 			{10,10,secondObjects->groups[noteObject->index].center,0},
-			{17,17,thisNote.speed,0},
+			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
 
-		auto trigger3 = dynamic_cast<SpawnTriggerGameObject*>(obj);
-		if (trigger3){
-			trigger3->m_targetGroupID = thisNote.spawnGroup;
-			trigger3->m_remapObjects = anotherRemap;
+		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+			trigger->m_remapObjects = thisRemap;
 		}
 
 		auto itemedit= ui->createObject(itemEditID,pos);
@@ -188,9 +195,8 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			trigger0->m_targetGroupID = noteObject->groups[noteObject->index].center;
 		}
 		
-		double offset2 = 0;
 		double objX2 = ((noteOffset*grid)+((daX+daDur)/1*(grid/timepergrid)))+Xpos;
-		double objY2 = (((daY+offset2)*grid)+Ypos);
+		double objY2 = ((daY*grid)+Ypos);
 		CCPoint pos2 = {(float)objX2,(float)objY2};
 		auto obj2 = ui->createObject(spawnID,pos2);
 
@@ -200,92 +206,103 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 
 		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj2);
 		if (trigger2){
-			trigger2->m_targetGroupID = thisNote.speed;
+			trigger2->m_targetGroupID = curSpeed;
 			trigger2->m_remapObjects = secondRemap;
 		}
+
 		return;
 	}
 
-	if (thisNote.noteType==-2){// heart
-		std::vector<ChanceObject> thatRemap = {
+	if (thisNote.spawnGroup==99){// note/heart
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+
+		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
+			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
-			{4,4,noteObject->groups[noteObject->index].group,0},
+			{4,4,curPathway,0},
 			{5,5,(daY==0)?90:91,0},
 			{6,6,(thisNote.speed==16)?96:(thisNote.speed==9)?97:98},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0}
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0}
 		};
 
-		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj);
-		if (trigger2){
-			trigger2->m_targetGroupID = thisNote.spawnGroup;
-			trigger2->m_remapObjects = thatRemap;
+		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+			trigger->m_remapObjects = thisRemap;
 		}
-
 		return;
 	}
 
-	if (thisNote.noteType==-3){// note
-		std::vector<ChanceObject> thatRemap = {
+	if (thisNote.spawnGroup==84){// gear
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+
+		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
+			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
-			{4,4,noteObject->groups[noteObject->index].group,0},
-			{5,5,(daY==0)?90:91,0},
-			{6,6,(thisNote.speed==16)?96:(thisNote.speed==9)?97:98},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0}
-		};
-
-		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj);
-		if (trigger2){
-			trigger2->m_targetGroupID = thisNote.spawnGroup;
-			trigger2->m_remapObjects = thatRemap;
-		}
-
-		return;
-	}
-
-	if (thisNote.noteType==3){// normal gear
-		std::vector<ChanceObject> thatRemap = {
-			{1,1,noteObject->groups[noteObject->index].group,0},
-			{2,2,thisNote.pos,0},
-			{3,3,noteObject->groups[noteObject->index].center,0},
-			{4,4,noteObject->groups[noteObject->index].group,0},
+			{4,4,curPathway,0},
 			{5,5,(daY==0)?81:80,0},
-			{7,7,thisNote.enter,0},
-			{17,17,thisNote.speed,0}
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0}
 		};
 
-		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj);
-		if (trigger2){
-			trigger2->m_targetGroupID = thisNote.spawnGroup;
-			trigger2->m_remapObjects = thatRemap;
+		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+			trigger->m_remapObjects = thisRemap;
 		}
-
 		return;
 	}
-	// normal note
-	std::vector<ChanceObject> thisRemap = {
-		{1,1,noteObject->groups[noteObject->index].group,0},
-		{2,2,thisNote.pos,0},
-		{3,3,noteObject->groups[noteObject->index].center,0},
-		{4,4,noteObject->groups[noteObject->index].group,0},
-		{5,5,(daY==0)?66:67,0},
-		{6,6,(daY==0)?99:97,0},
-		{7,7,thisNote.enter,0},
-		{17,17,thisNote.speed,0},
-		{41,41,thisNote.sound,0}
-	};
+	
+	if (thisNote.spawnGroup==13){// normal note
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPathway = (daY==0)?191:192;
+		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
+		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
 
-	auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
-	if (trigger){
-		trigger->m_targetGroupID = thisNote.spawnGroup;
-		trigger->m_remapObjects = thisRemap;
+		if (thisNote.noteType==6){
+			curPathway = 0;
+			curEnter = thisNote.enter+((data["note"]["speed"].asInt().unwrap()*(data["note"]["pathway"].asInt().unwrap()+1)))-1;
+		}
+
+		std::vector<ChanceObject> thisRemap = {
+			{1,1,noteObject->groups[noteObject->index].group,0},
+			{2,2,curPos,0},
+			{3,3,noteObject->groups[noteObject->index].center,0},
+			{4,4,curPathway,0},
+			{5,5,(daY==0)?66:67,0},
+			{6,6,(daY==0)?99:97,0},
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0},
+			{41,41,thisNote.sound,0}
+		};
+
+		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+			trigger->m_remapObjects = thisRemap;
+		}
+		return;
 	}
 
+	ui->deleteObject(obj,true);
 }
 
 int doMD(LevelEditorLayer* editor, matjson::Value data){

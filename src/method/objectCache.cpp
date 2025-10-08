@@ -677,8 +677,8 @@ objectsData masherUp = {
 
 void deleteLastUsed(objectsData* theobjects){
     for (int i=0;i<theobjects->groups.size();i++){
-        theobjects->groups[i].dur = nullptr;
-        theobjects->groups[i].lastUsed = nullptr;
+        theobjects->groups[i].dur = -100;
+        theobjects->groups[i].lastUsed = -100;
     }
 }
 

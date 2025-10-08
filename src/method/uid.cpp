@@ -1,12 +1,84 @@
 #include "uid.hpp"
+/*
+cheatsheet
 
-//1-6 mid
-//7-12 bottom
-//13-18 top
+ibms_id
+which spawn group to trigger
+what kind of note is this
+spawn pos
+speed 1-2-3
+enter animation
+sound to play
+objdown
+objup
+*/
 
-//id 99 is universal
 
 std::vector<note_data> note_uids = {
+    {"01",13,1,23,141,0,43,&smallDown,&smallUp},
+    {"02",13,1,26,141,18,43,&smallDown,&smallUp},
+    {"03",13,1,29,141,38,43,&smallDown,&smallUp},
+
+    {"04",13,2,23,141,0,44,&med1Down,&med1Up},
+    {"05",13,2,26,141,18,44,&med1Down,&med1Up},
+    {"06",13,2,29,141,38,44,&med1Down,&med1Up},
+
+    {"07",13,3,23,141,0,44,&med2Down,&med2Up},
+    {"08",13,3,26,141,18,44,&med2Down,&med2Up},
+    {"09",13,3,29,141,38,44,&med2Down,&med2Up},
+
+    {"0A",13,4,23,141,0,45,&large1Down,&large1Up},
+
+    {"0B",13,5,23,141,0,45,&large2Down,&large2Up},
+
+    {"0C",13,6,161,164,173,43,&raiderDown,&raiderUp},
+
+    {"0D",144,7,138,158,150,44,&hammerDown,&hammerUp},
+
+    {"0E",13,8,23,141,0,43,&geminiDown,&geminiUp},
+
+    {"0F",104,9,23,141,0,46,&holdDown,&holdUp,&holdDownEnd,&holdUpEnd},
+
+    {"0G",179,10,23,141,0,0,&masherDown},
+
+    {"0H",84,11,23,141,0,0,&gearDown,&gearUp},
+
+    // {"0I",} upside down raider not planned
+    // {"0J",} same as hammer
+
+    // {"11",} boss attack1
+    // {"12",} boss attack2
+    // {"13",} boss note1
+    {"13",13,1,23,141,0,43,&smallDown,&smallUp}, // temp
+    // {"14",} boss note2
+    {"14",13,2,23,141,0,44,&med1Down,&med1Up}, // temp
+    // {"15",} boss note3
+    {"15",13,3,23,141,0,44,&med2Down,&med2Up}, // temp
+
+    //boss masher
+    {"16",179,10,23,141,0,0,&masherDown}, // temp
+    {"17",179,10,23,141,0,0,&masherDown}, // temp
+
+    // boss give gears
+    {"18",84,11,23,141,0,0,&gearDown,&gearUp}, // temp
+
+    // {"1A",} boss in
+    // {"1B",} boss out
+    // 1C to 1H r just boss phases
+    // skip not planned stuff
+
+    {"21",13,12,23,141,0,44,&ghostDown,&ghostUp},
+
+    {"22",99,13,23,141,0,0,&heartDown,&heartUp},
+
+    {"23",99,14,23,141,0,0,&noteDown,&noteUp},
+
+    // and more
+
+    /*
+
+    old method
+
     {"000201",99,-2,23,16,0,&heartDown,42},
     {"000202",99,-2,24,9,0,&heartDown,42},
     {"000203",99,-2,25,8,0,&heartDown,42},
@@ -206,4 +278,5 @@ std::vector<note_data> note_uids = {
     {"991704",13,17,26,16,0,&ghostUp,43},
     {"991705",13,17,27,9,0,&ghostUp,43},
     {"991706",13,17,28,8,0,&ghostUp,43},
+    */
 };
