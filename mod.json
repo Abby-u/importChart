@@ -7,5 +7,50 @@
 	"name": "Import Chart",
 	"version": "v1.0.0",
 	"developer": "aldora",
-	"description": "fnf chart importer"
+	"description": "chart importer",
+	"settings": {
+		"fnf-title": {
+			"type": "title",
+			"name": "Friday Night Funkin' Compability"
+		},
+		"fnf-toggle-test": {
+			"type": "bool",
+			"name": "w",
+			"default": false,
+			"description": "bool test"
+		},
+		"md-title": {
+			"type": "title",
+			"name": "Muse Dash Compability"
+		},
+		"md-extractor-path": {
+			"type": "file",
+			"name": "Path to MD Asset Viewer (Required)",
+			"default": {
+				"win": ""
+			},
+			"control": {
+				"dialog": "open",
+				"filters": [
+					{
+						"files": ["*.exe"],
+						"description": "Executables"
+					}
+				]
+			},
+			"description": "I can't access Unity bundled assets without this, thus cannot import Muse Dash chart. There is probably an easier way to bridge between C# and C++ but I'm not an expert."
+		},
+		"md-game-path": {
+			"type": "folder",
+			"name": "Path to Muse Dash Assets",
+			"default": "",
+			"description": "If you have Muse Dash installed, put the game assets location here, usually found in (Muse Dash/MuseDash_Data/StreamingAssets/aa/StandaloneWindows64) then select StandaloneWindows64 folder. This is used for auto-detecting all Muse Dash music data."
+		},
+		"md-prefetch-demo": {
+			"type": "bool",
+			"name": "Pre-extract Demo Music (not planned yet)",
+			"default": false,
+			"description": "Requires MD Asset Viewer and Muse Dash Assets. Pre-extract Muse Dash Demo songs (or preview songs) so that you can browse freely (These thing take about 2,2 GB storage for all songs). remind me to change this into a custom button ,"
+		}
+	}
 }
