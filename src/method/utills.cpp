@@ -18,9 +18,14 @@ int getData(std::function<void(matjson::Value)> onResult){
 			onResult(matjson::Value());
 			return 0;
 		}
-		log::info("ok");
+		// log::info("ok");
 		onResult(jsonData.unwrap());
         return 0;
 	});
     return 0;
+}
+
+void notif(std::string themsg, std::string icon){
+	auto deicon = CCSprite::createWithSpriteFrameName(icon.c_str());
+	geode::Notification::create(themsg,deicon)->show();
 }

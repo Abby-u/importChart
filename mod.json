@@ -25,7 +25,7 @@
 		},
 		"md-extractor-path": {
 			"type": "file",
-			"name": "Path to MD Asset Viewer (Required)",
+			"name": "Path to MD Asset extractor (Required)",
 			"default": {
 				"win": ""
 			},

@@ -97,26 +97,6 @@ int checkNoteType(matjson::Value note,int origin){
 	return final;
 }
 
-// int getData(std::function<void(matjson::Value)> onResult){
-// 	utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([onResult](geode::Result<std::filesystem::path, std::string>* file){
-// 		if (!file){
-// 			FLAlertLayer::create("No file selected", "Import cancelled", "OK")->show();
-// 			onResult(matjson::Value());
-// 			return 0;
-// 		}
-// 		auto rawData = file->unwrap();
-// 		auto jsonData = utils::file::readJson(rawData);
-// 		if (!jsonData) {
-// 			FLAlertLayer::create("Invalid File Type", "This ain't json file. Import cancelled", "OK")->show();
-// 			log::warn("this aint json");
-// 			onResult(matjson::Value());
-// 			return 0;
-// 		}
-// 		log::info("ok");
-// 		onResult(jsonData.unwrap());
-// 	});
-// }
-
 int getTargetGroup(int num){
 	switch (num){
 		case 0: return leftG;
@@ -192,8 +172,6 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0, i
 
 	editor->updateObjectLabel(obj);
 	editor->updateObjectLabel(obj1);
-	// selection->addObject(obj);
-	// selection->addObject(obj1);
 }
 
 void addSpawn(LevelEditorLayer* editor, double daX, double daY, int group, bool parent = false){
@@ -210,8 +188,6 @@ void addSpawn(LevelEditorLayer* editor, double daX, double daY, int group, bool 
 	obj->m_hasGroupParent = parent;
 
 	editor->updateObjectLabel(obj);
-	// selection->addObject(obj);
-
 }
 
 //changed to editAreaScale
@@ -227,20 +203,11 @@ void addAreaScale(LevelEditorLayer* editor, double daX, double daY, int target, 
 	if (daAreaTrigger){
 		daAreaTrigger->m_length = daLength;
 		daAreaTrigger->m_duration = 0.0f;
-		//daAreaTrigger->m_offset = daLength*-1;
 		daAreaTrigger->m_areaScaleY = scaleY;
-		//daAreaTrigger->m_areaScaleX = 1.0f;
 		daAreaTrigger->m_useEffectID = true;
 		daAreaTrigger->m_targetGroupID = daeffectID; //bruh it should be m_effectID
 	}
-	// auto normalLookingTrigger = dynamic_cast<EffectGameObject*>(daObj);
-	// if (normalLookingTrigger){
-	// 	normalLookingTrigger->m_targetGroupID = target;
-	// 	normalLookingTrigger->m_centerGroupID = center;
-	// }
-
 	editor->updateObjectLabel(daObj);
-	// selection->addObject(daObj);
 }
 
 void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early = false){
@@ -286,8 +253,6 @@ void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early 
 
 	editor->updateObjectLabel(obj);
 	editor->updateObjectLabel(obj1);
-	// selection->addObject(obj);
-	// selection->addObject(obj1);
 }
 
 void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daScroll,double daDur,bool early = false){
@@ -324,9 +289,6 @@ void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daS
 		trigger6->m_useEffectID = true;
 		trigger6->m_targetGroupID = 31;
 	}
-
-	// selection->addObject(obj);
-	// selection->addObject(obj1);
 }
 
 void fnfChart(LevelEditorLayer* editor,matjson::Value data){
@@ -348,8 +310,6 @@ void fnfChart(LevelEditorLayer* editor,matjson::Value data){
 	bpm = 120;
 	scroll = 1.0;
 	beat = 0;
-	// spawnPos.setPoint(5025.0,0.0);
-	// selection->removeAllObjects();
 	auto ui = editor->m_editorUI;
 	auto objects = ui->getSelectedObjects();
 	if (objects && objects->count() > 0){
@@ -363,7 +323,6 @@ void fnfChart(LevelEditorLayer* editor,matjson::Value data){
 		}
 		Ypos = minY;
 		Xpos = minX;
-		// spawnPos.setPoint(minX,minY);
 	}
 	noteOffset = (1.56/0.09628343)*-1;
 	daTime = 0.0;
@@ -438,6 +397,9 @@ void fnfChart(LevelEditorLayer* editor,matjson::Value data){
 			}
 		}
 		editor->updateEditor(0.0f);
+		auto root = CCDirector::sharedDirector()->getRunningScene();
+		root->removeChildByID("importChartPopup");
+		notif("Done","GJ_completesIcon_001.png");
 	}else if (validateVSliceChart(data)) {
 		//vslice
 		getData([data,editor](matjson::Value metadata){
@@ -473,6 +435,9 @@ void fnfChart(LevelEditorLayer* editor,matjson::Value data){
 					addSpawn(editor,dTime,19.0f,1224);
 				}
 			}
+			auto root = CCDirector::sharedDirector()->getRunningScene();
+			root->removeChildByID("importChartPopup");
+			notif("Done","GJ_completesIcon_001.png");
 			return 0;
 		});
 		return;

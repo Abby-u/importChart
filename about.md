@@ -10,7 +10,9 @@ The mod adds a button in editor pause menu (bottom-left) and ask you to select c
 
 It's better to test it in empty level.
 
-support muse dash DEserialized chart for now (this usually required 2 apps to be used, will upload a muse dash asset extractor soon or later so it can work with this, separated .exe). might update soon or nevr.
+support muse dash .bundle chart(requires [mdextract](https://github.com/Abby-u/mdextract)), fnf old PsychEngine (pre v1.0 and older) and v-slice chart. might update soon or nevr.
 if you want to use this for fnf chart, use older version on github.
+
+im planning to make trigger outputs to be customizable based on user needs but idk how to implement that yet (prolly tedius and confusing)
 
 [fnf tutorial video](https://youtu.be/n2tuaLAaCK0?feature=shared&t=77)

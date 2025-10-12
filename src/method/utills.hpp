@@ -3,4 +3,6 @@
 
 int getData(std::function<void(matjson::Value)> onResult);
 
+void notif(std::string themsg, std::string icon);
+
 #endif

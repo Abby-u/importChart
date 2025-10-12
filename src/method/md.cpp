@@ -4,6 +4,7 @@
 #include "uid.hpp"
 #include "objectCache.hpp"
 #include <string>
+#include "utills.hpp"
 
 using namespace geode::prelude;
 
@@ -305,7 +306,8 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 	ui->deleteObject(obj,true);
 }
 
-int doMD(LevelEditorLayer* editor, matjson::Value data){
+int MDchart(LevelEditorLayer* editor, matjson::Value data){
+	// log::info("{}",data.dump());
     if (!editor){
 		log::warn("editor gone??");
 		return 0;
@@ -320,7 +322,7 @@ int doMD(LevelEditorLayer* editor, matjson::Value data){
     areaScaleID = 3008;
     itemEditID = 3619;
     daTime = 0;
-    bpm = 120;
+    bpm = data["bpm"].asDouble().unwrap();
     scroll = 1.0;
     beat = 0;
 	overflow = false;
@@ -340,7 +342,7 @@ int doMD(LevelEditorLayer* editor, matjson::Value data){
 		Ypos = minY;
 		Xpos = minX;
 	}
-	for (const auto& [a, b]:data){
+	for (const auto& [a, b]:data["notes"].asArray().unwrap()){
 		addNoteMD(editor,b);
 	}
 	if (overflow){
@@ -351,5 +353,8 @@ int doMD(LevelEditorLayer* editor, matjson::Value data){
 		message = message+".";
 		FLAlertLayer::create("Notes overflow", message, "Oh :(")->show();
 	}
+	auto root = CCDirector::sharedDirector()->getRunningScene();
+	root->removeChildByID("mdPopup");
+	notif("Done","GJ_completesIcon_001.png");
     return 0;
 }
