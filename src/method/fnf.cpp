@@ -145,7 +145,7 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0, i
 	double objY = (((daY+offset)*grid)+Ypos);
 	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
-	auto trigger = dynamic_cast<EffectGameObject*>(obj);
+	auto trigger = static_cast<EffectGameObject*>(obj);
 	if (trigger){
 		trigger->m_targetGroupID = (targetG!=0)?targetG:getTargetGroup(daY);
 	}
@@ -153,7 +153,7 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0, i
 	double obj1Y = (((daY+offset)*grid)+Ypos);
 	CCPoint pos1 = {(float)obj1X,(float)obj1Y};
 	auto obj1 = ui->createObject(itemEditID,pos1);
-	auto trigger1 = dynamic_cast<ItemTriggerGameObject*>(obj1);
+	auto trigger1 = static_cast<ItemTriggerGameObject*>(obj1);
 	if (trigger1){
 		trigger1->m_mod1 = dur;
 		trigger1->m_targetItemMode = 2;
@@ -162,7 +162,7 @@ void addNote(LevelEditorLayer* editor, double daX, double daY, double dur = 0, i
 	}
 
 	auto obj2 = ui->createObject(itemEditID,pos1);
-	auto trigger2 = dynamic_cast<ItemTriggerGameObject*>(obj2);
+	auto trigger2 = static_cast<ItemTriggerGameObject*>(obj2);
 	if (trigger2){
 		trigger2->m_mod1 = daType;
 		trigger2->m_targetItemMode = 1;
@@ -181,7 +181,7 @@ void addSpawn(LevelEditorLayer* editor, double daX, double daY, int group, bool 
 	double objY = ((daY*grid)+Ypos);
 	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
-	auto trigger = dynamic_cast<EffectGameObject*>(obj);
+	auto trigger = static_cast<EffectGameObject*>(obj);
 	if (trigger){
 		trigger->m_targetGroupID = group;
 	}
@@ -199,7 +199,7 @@ void addAreaScale(LevelEditorLayer* editor, double daX, double daY, int target, 
 	double dY = (((daY+1)*grid)+Ypos);
 	CCPoint daPos = {(float)dX,(float)dY};
 	auto daObj = ui->createObject(3013,daPos);
-	auto daAreaTrigger = dynamic_cast<EnterEffectObject*>(daObj);
+	auto daAreaTrigger = static_cast<EnterEffectObject*>(daObj);
 	if (daAreaTrigger){
 		daAreaTrigger->m_length = daLength;
 		daAreaTrigger->m_duration = 0.0f;
@@ -217,7 +217,7 @@ void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early 
 	double objY = ((daY*grid)+Ypos);
 	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
-	auto trigger = dynamic_cast<EffectGameObject*>(obj);
+	auto trigger = static_cast<EffectGameObject*>(obj);
 	if (trigger){
 		trigger->m_targetGroupID = 396;
 	}
@@ -225,13 +225,13 @@ void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early 
 	double obj1Y = ((daY*grid)+Ypos);
 	CCPoint pos1 = {(float)obj1X,(float)obj1Y};
 	auto obj1 = ui->createObject(itemEditID,pos1);
-	auto trigger1 = dynamic_cast<ItemTriggerGameObject*>(obj1);
+	auto trigger1 = static_cast<ItemTriggerGameObject*>(obj1);
 	if (trigger1){
 		trigger1->m_mod1 = bpm;
 		trigger1->m_targetItemMode = 2;
 		trigger1->m_resultType3 = 2;
 	}
-	auto trigger3 = dynamic_cast<EffectGameObject*>(obj1);
+	auto trigger3 = static_cast<EffectGameObject*>(obj1);
 	if (trigger3){
 		trigger3->m_targetGroupID = 2;
 	}
@@ -265,7 +265,7 @@ void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daS
 	double obj2Y = (((daY)*grid)+Ypos);
 	CCPoint pos2 = {(float)obj2X,(float)obj2Y};
 	auto obj2 = ui->createObject(3011,pos2);
-	auto trigger4 = dynamic_cast<EnterEffectObject*>(obj2);
+	auto trigger4 = static_cast<EnterEffectObject*>(obj2);
 	if (trigger4){
 		trigger4->m_moveDistance = (std::max((double)1.0,resultscroll)-1.0)*300;
 		trigger4->m_duration = daDur;
@@ -273,7 +273,7 @@ void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daS
 		trigger4->m_targetGroupID = 29; //bruh it should be m_effectID
 	}
 	auto obj3 = ui->createObject(3011,pos2);
-	auto trigger5 = dynamic_cast<EnterEffectObject*>(obj3);
+	auto trigger5 = static_cast<EnterEffectObject*>(obj3);
 	if (trigger5){
 		trigger5->m_moveDistance = (std::max((double)1.0,resultscroll)-1.0)*300;
 		trigger5->m_duration = daDur;
@@ -281,7 +281,7 @@ void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daS
 		trigger5->m_targetGroupID = 30;
 	}
 	auto obj4 = ui->createObject(3013,pos2);
-	auto trigger6 = dynamic_cast<EnterEffectObject*>(obj4);
+	auto trigger6 = static_cast<EnterEffectObject*>(obj4);
 	if (trigger6){
 		trigger6->m_areaScaleY = (std::max((double)1.0,resultscroll));
 		trigger6->m_areaScaleX = 1.0;

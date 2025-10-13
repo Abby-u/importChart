@@ -121,19 +121,23 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 			auto fnfButton = ButtonSprite::create("FNF chart (.json)",0.70f);
 			auto mdButton = ButtonSprite::create("MD chart (.bundle)",0.70f);
+			auto mdjsonButton = ButtonSprite::create("MD chart (.json)",0.70f);
 			auto mdmButton = ButtonSprite::create("MDM chart (.mdm)",0.70f);
 
 			auto daFnf = CCMenuItemSpriteExtra::create(fnfButton,menu,menu_selector(editedPauseLayer::doFnf));
 			auto daMd = CCMenuItemSpriteExtra::create(mdButton,menu,menu_selector(editedPauseLayer::dotheMD));
+			auto daMdjson = CCMenuItemSpriteExtra::create(mdjsonButton,menu,menu_selector(editedPauseLayer::dotheMD));
 			auto daMdm = CCMenuItemSpriteExtra::create(mdmButton,menu,menu_selector(editedPauseLayer::doFnf));
 			auto infoButton = InfoAlertButton::create("Help","<cl>MDExtract</c> is required to import <cp>Muse Dash</c> chart. Also owning <cp>Muse Dash</c> is required (to get Unity .bundle file, which is where the chart was saved). You can download the tool from mod desc, then save its directory in the mod settings.",1.0f);
 
 			daFnf->setID("fnf"_spr);
 			daMd->setID("md"_spr);
+			daMdjson->setID("mdjson"_spr);
 			daMdm->setID("mdm"_spr);
 
 			menu->addChild(daFnf,0,-1);
 			menu->addChild(daMd,0,-1);
+			menu->addChild(daMdjson,0,-1);
 			menu->addChild(daMdm,0,-1);
 			defMenu->addChild(infoButton);
 
@@ -226,14 +230,18 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					auto cell = CCNode::create();
 					cell->setContentWidth(360.0f);
 					auto title = CCLabelBMFont::create(nameOnly(mapname).c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentLeft);
+					auto noteCount = CCLabelBMFont::create((std::to_string(sumnotes)+" notes").c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentLeft);
 					CCPoint anchor = {0.0,0.5};
 					title->setAnchorPoint(anchor);
 					title->setScale(0.5f);
+					noteCount->setAnchorPoint(anchor);
+					noteCount->setScale(0.3f);
 					
-					cell->addChildAtPosition(title,Anchor::Left);
+					cell->addChildAtPosition(noteCount,Anchor::Left,CCPoint(0.0,-5.0));
+					cell->addChildAtPosition(title,Anchor::Left,CCPoint(0.0,5.0));
 					CCPoint offset = {-15.0,0.0};
 					cell->addChildAtPosition(damenu,Anchor::Right,offset);
-					scrollable->m_contentLayer->addChild(cell,i,i);
+					scrollable->m_contentLayer->addChild(cell,diff,i);
 					diffNotes->addObject(cell);
 					i++;
 				}
@@ -245,7 +253,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			auto infoSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
 			auto createButton = ButtonSprite::create("Create",0.70f);
 
-			auto infoButton = InfoAlertButton::create("Help","One song can have 1 to 6 (maybe more) difficulties. The differences are ammounts of notes and effects. <co>map</c> higher than 3 is usually a hiidden chart",1.0f);
+			auto infoButton = InfoAlertButton::create("Help","One song can have 1 to 6 (maybe more) difficulties. The differences are amounts of notes and effects. <co>map</c> higher than 3 is usually a hidden chart",1.0f);
 			defMenu->addChild(infoButton);
 
 			CCPoint pos = {380.0f,230.0f};
@@ -257,6 +265,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 			scrollable->ignoreAnchorPointForPosition(false);
 
+			scrollable->m_contentLayer->setLayout(sAxis);
 			sAxis->apply(scrollable->m_contentLayer);
 
 			return true;
@@ -362,6 +371,27 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		MDchart(GameManager::sharedState()->getEditorLayer(),content);
 	}
 
+	void doMdjson(CCObject*){
+		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([this](geode::Result<std::filesystem::path, std::string>* file){
+			if (!file){
+				log::info("nvm");
+				return;
+			}
+			auto filePath = file->unwrap();
+			std::string ext = (filePath.has_extension())?filePath.extension().string() : "";
+			// log::info("{}",ext);
+			auto editor = GameManager::sharedState()->getEditorLayer();
+			if (ext == ".json"){
+				MDchart(editor,utils::file::readJson(filePath).unwrap());
+			} else {
+				FLAlertLayer::create("Invalid File Type", "This file isnt supported.", "OK")->show();
+				log::warn("this aint supported");
+				return;
+			}
+			return;
+		});
+	}
+
 	void doFnf(CCObject*){
 		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([this](geode::Result<std::filesystem::path, std::string>* file){
 			if (!file){
@@ -407,12 +437,17 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					if (ev->getValue()){
 						log::info("extract finished");
 						std::string res = *ev->getValue();
-						matjson::Value thejson = matjson::parse(res).unwrap();
+						auto thejson = matjson::parse(res);
+						if (thejson.isErr()){
+							log::warn("something happened on mdextract output, most likely an error output: {}",res);
+							notif(res,"GJ_deleteIcon_001.png",5);
+							return;
+						}
 						auto root = CCDirector::sharedDirector()->getRunningScene();
 						root->removeChildByID("importChartPopup");
-						initMDPopup(thejson);
+						initMDPopup(thejson.unwrap());
 					}else if (ev->isCancelled()){
-						log::warn("extract cancelled or error");
+						log::warn("extract cancelled");
 					}
 				});
 				m_fields->m_extractListener.setFilter(runMDextract(cmd));

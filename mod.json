@@ -8,6 +8,12 @@
 	"version": "v1.0.0",
 	"developer": "aldora",
 	"description": "chart importer",
+	"dependencies":{
+		"fleym.nongd": {
+			"version": ">=1.0.0",
+			"importance": "suggested"
+		}
+	},
 	"settings": {
 		"fnf-title": {
 			"type": "title",

@@ -107,7 +107,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{41,41,thisNote.sound,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -115,7 +115,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 
 		auto itemedit= ui->createObject(itemEditID,pos);
 
-		auto trigger0 = dynamic_cast<ItemTriggerGameObject*>(itemedit);
+		auto trigger0 = static_cast<ItemTriggerGameObject*>(itemedit);
 		if (trigger0){
 			trigger0->m_mod1 = daDur*1000;
 			trigger0->m_targetItemMode = 2;
@@ -147,7 +147,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{41,41,thisNote.sound,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -180,7 +180,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{41,41,thisNote.sound,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -188,7 +188,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 
 		auto itemedit= ui->createObject(itemEditID,pos);
 
-		auto trigger0 = dynamic_cast<ItemTriggerGameObject*>(itemedit);
+		auto trigger0 = static_cast<ItemTriggerGameObject*>(itemedit);
 		if (trigger0){
 			trigger0->m_mod1 = daDur*1000;
 			trigger0->m_targetItemMode = 2;
@@ -205,7 +205,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{1,1,secondObjects->groups[noteObject->index].group,0}
 		};
 
-		auto trigger2 = dynamic_cast<SpawnTriggerGameObject*>(obj2);
+		auto trigger2 = static_cast<SpawnTriggerGameObject*>(obj2);
 		if (trigger2){
 			trigger2->m_targetGroupID = curSpeed;
 			trigger2->m_remapObjects = secondRemap;
@@ -234,7 +234,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{17,17,curSpeed,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -261,7 +261,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{17,17,curSpeed,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -295,7 +295,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 			{41,41,thisNote.sound,0}
 		};
 
-		auto trigger = dynamic_cast<SpawnTriggerGameObject*>(obj);
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
 			trigger->m_remapObjects = thisRemap;
@@ -345,6 +345,7 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data){
 	for (const auto& [a, b]:data["notes"].asArray().unwrap()){
 		addNoteMD(editor,b);
 	}
+
 	if (overflow){
 		std::string message = "This chart uses too many notes in under 2 seconds threshold. You may notice some notes behaving unexpectedly. Overflow object variants:";
 		for (int i=0;i<overflowObjects.size();i++){

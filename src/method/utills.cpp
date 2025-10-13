@@ -25,7 +25,7 @@ int getData(std::function<void(matjson::Value)> onResult){
     return 0;
 }
 
-void notif(std::string themsg, std::string icon){
+void notif(std::string themsg, std::string icon, float time){
 	auto deicon = CCSprite::createWithSpriteFrameName(icon.c_str());
-	geode::Notification::create(themsg,deicon)->show();
+	geode::Notification::create(themsg,deicon,time)->show();
 }
