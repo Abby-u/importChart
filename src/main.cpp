@@ -127,7 +127,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			auto daFnf = CCMenuItemSpriteExtra::create(fnfButton,menu,menu_selector(editedPauseLayer::doFnf));
 			auto daMd = CCMenuItemSpriteExtra::create(mdButton,menu,menu_selector(editedPauseLayer::dotheMD));
 			auto daMdjson = CCMenuItemSpriteExtra::create(mdjsonButton,menu,menu_selector(editedPauseLayer::dotheMD));
-			auto daMdm = CCMenuItemSpriteExtra::create(mdmButton,menu,menu_selector(editedPauseLayer::doFnf));
+			auto daMdm = CCMenuItemSpriteExtra::create(mdmButton,menu,menu_selector(editedPauseLayer::doFnf));// todo
 			auto infoButton = InfoAlertButton::create("Help","<cl>MDExtract</c> is required to import <cp>Muse Dash</c> chart. Also owning <cp>Muse Dash</c> is required (to get Unity .bundle file, which is where the chart was saved). You can download the tool from mod desc, then save its directory in the mod settings.",1.0f);
 
 			daFnf->setID("fnf"_spr);
@@ -244,6 +244,11 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					scrollable->m_contentLayer->addChild(cell,diff,i);
 					diffNotes->addObject(cell);
 					i++;
+				}else if (std::filesystem::path(pathValue.asString().unwrap()).extension()==".ogg"){
+					auto result = geode::utils::clipboard::write(pathValue.asString().unwrap());
+					if (result){
+						notif("Copied song directory","GJ_infoIcon_001.png");
+					}
 				}
 			}
 
