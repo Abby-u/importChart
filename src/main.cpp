@@ -422,7 +422,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
 
 					// @geode-ignore(unknown-resource)
-					std::filesystem::path thesongpath = od::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_music"+entry.extension().string()));
+					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_music"+entry.extension().string()));
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
 						auto result = geode::utils::clipboard::write(thesongpath.string());
