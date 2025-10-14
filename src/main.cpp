@@ -418,11 +418,11 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					diffNotes->addObject(cell);
 					i++;
 				// @geode-ignore(unknown-resource)
-				}else if(entry=="music.ogg"){
+				}else if(entry.stem().string()=="music"){
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
 
 					// @geode-ignore(unknown-resource)
-					std::filesystem::path thesongpath = Mod::get()->getConfigDir() / (utills::string::wideToUtf8(songname) + "_music.ogg");
+					std::filesystem::path thesongpath = od::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_music"+entry.extension().string()));
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
 						auto result = geode::utils::clipboard::write(thesongpath.string());
