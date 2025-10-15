@@ -10,6 +10,7 @@
 #include <math.h>
 #include "method/fnf.hpp"
 #include "method/md.hpp"
+#include "method/mdm.hpp"
 #include "method/utills.hpp"
 #include <optional>
 
@@ -163,7 +164,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			auto daMd = CCMenuItemSpriteExtra::create(mdButton,menu,menu_selector(editedPauseLayer::pickNRunPipe));
 			auto daMdjson = CCMenuItemSpriteExtra::create(mdjsonButton,menu,menu_selector(editedPauseLayer::doMdjson));
 			auto daMdm = CCMenuItemSpriteExtra::create(mdmButton,menu,menu_selector(editedPauseLayer::viewMdm));// todo
-			auto infoButton = InfoAlertButton::create("Help","<cl>MDExtract</c> is required to import <cp>Muse Dash</c> chart. Also owning <cp>Muse Dash</c> is required (to get Unity .bundle file, which is where the chart was saved). You can download the tool from mod desc, then save its directory in the mod settings.",1.0f);
+			auto infoButton = InfoAlertButton::create("Help","FNF (.json) is FNF obviously.\nMD (.bundle) is <cp>Muse Dash</c> Unity .bundle assets (require <cr>MDExtract</c>, see mod description).\nMD (.json) is the decompiled .bundle <co>map</c>.\nMDM (.mdm) is community-made custom <cp>Muse Dash</c> chart.\nYou can find MDM charts at <cy>mdmc.moe/charts</c>.",0.7f);
 
 			daFnf->setID("fnf"_spr);
 			daMd->setID("md"_spr);
@@ -416,16 +417,16 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					cell->addChildAtPosition(damenu,Anchor::Right,offset);
 					scrollable->m_contentLayer->addChild(cell,diff,i);
 					diffNotes->addObject(cell);
-					i++;
 				// @geode-ignore(unknown-resource)
 				}else if(entry.stem().string()=="music"){
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
 
 					// @geode-ignore(unknown-resource)
 					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_music"+entry.extension().string()));
+					log::info("{}",thesongpath.string());
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
-						auto result = geode::utils::clipboard::write(thesongpath.string());
+						auto result = geode::utils::clipboard::write(thesongpath.generic_string());
 						if (result){
 							notif("Copied song directory","GJ_infoIcon_001.png");
 						}else{
@@ -445,9 +446,8 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 						demochannel->stop();
 						demo->release();
 						demo = nullptr;
-						FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(thesongpath.string().c_str(),FMOD_CREATESTREAM,nullptr,&demo);
+						FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(thesongpath.generic_string().c_str(),FMOD_CREATESTREAM|FMOD_LOOP_NORMAL,nullptr,&demo);
 						if (test2 == FMOD_OK){
-							demo->setLoopCount(sizeof(int));
 							FMOD_RESULT reult = FMODAudioEngine::sharedEngine()->m_system->playSound(demo,nullptr,false,&demochannel);
 							if (reult == FMOD_OK){
 								log::info("demo play");
@@ -461,6 +461,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 						log::warn("cant extract ogg");
 					}
 				}
+				i++;
 			}
 			// auto tbyte = content.extract(entry).unwrap();
 			// auto ext = entry.extension();
@@ -497,15 +498,15 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			return true;
 		}
 		void onClose(CCObject* sender) override {
-				// if (demochannel) 
-				// if (demo) {
-				// 	
-				// }
-				demochannel->stop();
-				demo->release();
-				demo = nullptr;
-				geode::Popup<std::wstring>::onClose(sender);
-			}
+			// if (demochannel) 
+			// if (demo) {
+			// 	
+			// }
+			demochannel->stop();
+			demo->release();
+			demo = nullptr;
+			geode::Popup<std::wstring>::onClose(sender);
+		}
 	public:
 		static mdmChartsPopup* create(std::wstring songname){
 			auto ret = new mdmChartsPopup();
@@ -601,14 +602,43 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 	}
 
 	void doMdm(CCObject* the){
-		FLAlertLayer::create("Oops","One must imagine decoding bms sheet easy. (hard)","damn ,")->show();
+		// FLAlertLayer::create("Oops","One must imagine decoding bms sheet easy. (hard)","damn ,")->show();
+		auto obj = static_cast<editedPauseLayer*>(the);
+		auto stringbyte = theunzip.value().extract(theunzip.value().getEntries()[obj->getTag()]).unwrap();
+		if (stringbyte.empty()){
+			log::warn("something wrong when parsing string bytes");
+			return;
+		}
+		std::string readStr(reinterpret_cast<const char*>(stringbyte.data()), stringbyte.size());
+		int res = mdmChart(GameManager::sharedState()->getEditorLayer(),std::move(readStr));
+		log::info("{}",res);
+		if (res==0){
+			demochannel->stop();
+			demo->release();
+			demo = nullptr;
+		}
+		// auto tbyte = content.extract(entry).unwrap();
+		// auto ext = entry.extension();
+		// log::info("{}",ext)
+		// if (!tbyte.empty()) {
+		// 	std::string readStr(reinterpret_cast<const char*>(tbyte.data()), tbyte.size());
+		// 	// log::info("{}", readStr);
+		// } else {
+		// 	log::warn("extracted entry is empty");
+		// }
+
 	}
 
 	void doMd(CCObject* sender){
 		auto obj = static_cast<editedPauseLayer*>(sender);
 		// log::info("{} {}",obj->getTag(),thefilepaths.dump());
 		auto content = geode::utils::file::readJson( std::filesystem::path( thefilepaths.asArray().unwrap()[obj->getTag()].asString().unwrap() ) ).unwrap();
-		MDchart(GameManager::sharedState()->getEditorLayer(),content);
+		int res = MDchart(GameManager::sharedState()->getEditorLayer(),content,head{});
+		if (res){
+			demochannel->stop();
+			demo->release();
+			demo = nullptr;
+		}
 	}
 
 	void doMdjson(CCObject*){
@@ -622,7 +652,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			// log::info("{}",ext);
 			auto editor = GameManager::sharedState()->getEditorLayer();
 			if (ext == ".json"){
-				MDchart(editor,utils::file::readJson(filePath).unwrap());
+				MDchart(editor,utils::file::readJson(filePath).unwrap(), head{});
 			} else {
 				FLAlertLayer::create("Invalid File Type", "This file isnt supported.", "OK")->show();
 				log::warn("this aint supported");
@@ -675,7 +705,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 				auto mdmPopup = mdmChartsPopup::create(filePath.stem().wstring());
 				mdmPopup->m_noElasticity = true;
-				mdmPopup->setID("importChartPopup");
+				mdmPopup->setID("mdmPopup");
 				mdmPopup->show();
 				
 

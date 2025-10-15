@@ -2,6 +2,7 @@
 #include "md.hpp"
 #include "mainVar.hpp"
 #include "uid.hpp"
+#include "mdm.hpp"
 #include "objectCache.hpp"
 #include <string>
 #include "utills.hpp"
@@ -39,7 +40,7 @@ void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 	for (int i = 0;i<daObjects->groups.size();i++){
 		if (!daObjects->groups[i].lastUsed||
 			((theX)-(daObjects->groups[i].lastUsed)>2.1&&
-			(theX)-(daObjects->groups[i].lastUsed+daObjects->groups[i].dur)>2.1)){
+			(theX)-(daObjects->groups[i].lastUsed+daObjects->groups[i].dur)>2.1)||daObjects->groups[i].lastUsed>theX){
 			daObjects->index = i;
 			daObjects->groups[i].lastUsed = theX;
 			daObjects->groups[i].dur = theDur;
@@ -63,16 +64,35 @@ void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 	}
 }
 
-void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
+void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruct mdmnote = notestruct()){
 	auto ui = editor->m_editorUI;
 
-	if (data["note"]["ibms_id"].isNull()){return;}
-	if (data["isLongPressing"].asBool().unwrap()||data["isLongPressEnd"].asBool().unwrap()){return;}
+	double daX;
+	double daY;
+	double daDur;
+	int daSpeed;
+	std::string ibms_id;
 
-	double daX = data["config"]["time"].asDouble().unwrap();
-	double daY = data["note"]["pathway"].asInt().unwrap();
-	double daDur = data["config"]["length"].asDouble().unwrap();
-	std::string ibms_id = data["note"]["ibms_id"].asString().unwrap();
+	if (data != nullptr){
+		if (data["note"]["ibms_id"].isNull()){return;}
+		if (data["isLongPressing"].asBool().unwrap()||data["isLongPressEnd"].asBool().unwrap()){return;}
+
+		daX = data["config"]["time"].asDouble().unwrap();
+		daY = data["note"]["pathway"].asInt().unwrap();
+		daDur = data["config"]["length"].asDouble().unwrap();
+		daSpeed = data["note"]["speed"].asInt().unwrap();
+		ibms_id = data["note"]["ibms_id"].asString().unwrap();
+	}else if(!mdmnote.ibms_id.empty()){
+		daX = mdmnote.time;
+		daY = mdmnote.pathway%2;
+		daDur = mdmnote.duration;
+		daSpeed = mdmnote.speed;
+		ibms_id = mdmnote.ibms_id;
+	}else{
+		return;
+	}
+
+	// log::info("{}",daX);
 
 	note_data thisNote = getNoteData(ibms_id);
 
@@ -93,9 +113,9 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -131,9 +151,9 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -161,9 +181,9 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -219,9 +239,9 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -247,9 +267,9 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -274,13 +294,13 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(data["note"]["speed"].asInt().unwrap()-1);
-		int curSpeed = thisNote.speed+(data["note"]["speed"].asInt().unwrap()-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(data["note"]["speed"].asInt().unwrap()-1):0;
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
 		if (thisNote.noteType==6){
 			curPathway = 0;
-			curEnter = thisNote.enter+((data["note"]["speed"].asInt().unwrap()*(data["note"]["pathway"].asInt().unwrap()+1)))-1;
+			curEnter = thisNote.enter+((daSpeed*(daY+1)))-1;
 		}
 
 		std::vector<ChanceObject> thisRemap = {
@@ -306,11 +326,10 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data){
 	ui->deleteObject(obj,true);
 }
 
-int MDchart(LevelEditorLayer* editor, matjson::Value data){
-	// log::info("{}",data.dump());
-    if (!editor){
+int MDchart(LevelEditorLayer* editor, matjson::Value data = nullptr, head mdmdata = head()){
+	if (!editor){
 		log::warn("editor gone??");
-		return 0;
+		return 1;
 	}
     grid = 30;
     timepergrid = 0.09628343;
@@ -322,7 +341,14 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data){
     areaScaleID = 3008;
     itemEditID = 3619;
     daTime = 0;
-    bpm = data["bpm"].asDouble().unwrap();
+	if (data!=nullptr){
+		bpm = data["bpm"].asDouble().unwrap();
+	}else if (!mdmdata.notes.empty()){
+		bpm = mdmdata.bpm;
+	}else{
+		log::warn("none");
+		return 1;
+	}
     scroll = 1.0;
     beat = 0;
 	overflow = false;
@@ -342,9 +368,18 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data){
 		Ypos = minY;
 		Xpos = minX;
 	}
-	for (const auto& [a, b]:data["notes"].asArray().unwrap()){
-		addNoteMD(editor,b);
+	if (data!=nullptr){
+		for (const auto& [a, b]:data["notes"].asArray().unwrap()){
+			addNoteMD(editor,b,notestruct{});
+		}
+	}else if (!mdmdata.notes.empty()){
+		for (const auto& b : mdmdata.notes){
+			addNoteMD(editor,nullptr,b);
+		}
 	}
+	auto root = CCDirector::sharedDirector()->getRunningScene();
+	root->removeChildByID("mdPopup");
+	root->removeChildByID("mdmPopup");
 
 	if (overflow){
 		std::string message = "This chart uses too many notes in under 2 seconds threshold. You may notice some notes behaving unexpectedly. Overflow object variants:";
@@ -354,8 +389,7 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data){
 		message = message+".";
 		FLAlertLayer::create("Notes overflow", message, "Oh :(")->show();
 	}
-	auto root = CCDirector::sharedDirector()->getRunningScene();
-	root->removeChildByID("mdPopup");
+	
 	notif("Done","GJ_completesIcon_001.png");
     return 0;
 }
