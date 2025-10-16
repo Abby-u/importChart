@@ -12,6 +12,9 @@ using namespace geode::prelude;
 bool overflow = false;
 std::vector<int> overflowObjects;
 
+double lastFlashTime;
+CCPoint lastFlashPos;
+
 std::string convertStageType(std::string originalUid){
 	std::string newuid = originalUid;
 	return newuid = "99" + newuid.substr(2,4);
@@ -107,6 +110,40 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 	double objY = ((daY*grid)+Ypos);
 	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
+
+	if (thisNote.noteType>=50&&thisNote.spawnGroup!=0){// events & effects
+		if (thisNote.noteType==62){//3 if's
+			if (ibms_id=="2I"){
+				lastFlashTime = daX;
+				lastFlashPos = pos;
+			}else if (ibms_id=="2J"){
+				auto color = ui->createObject(899,lastFlashPos);
+				auto colort = static_cast<EffectGameObject*>(color);
+				if (colort){
+					colort->m_opacity = 1.0f;
+					colort->m_targetColor = 12;
+					colort->m_duration = daX-lastFlashTime;
+				}
+				lastFlashTime = daX;
+				lastFlashPos = pos;
+			}else if (ibms_id=="2K"){
+				auto color = ui->createObject(899,lastFlashPos);
+				auto colort = static_cast<EffectGameObject*>(color);
+				if (colort){
+					colort->m_opacity = 0.0f;
+					colort->m_targetColor = 12;
+					colort->m_duration = daX-lastFlashTime;
+				}
+			}
+			ui->deleteObject(obj,true);
+			return;
+		}
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+		}
+		return;
+	}
 
 	if (thisNote.spawnGroup==179){// masher
 		objectsData* noteObject = thisNote.objDown;
