@@ -52,11 +52,21 @@
 			"default": "",
 			"description": "If you have Muse Dash installed, put the game assets location here, usually found in (Muse Dash/MuseDash_Data/StreamingAssets/aa/StandaloneWindows64) then select StandaloneWindows64 folder. This is used for auto-detecting all Muse Dash music data."
 		},
-		"md-prefetch-demo": {
+		"md-extract-demo": {
 			"type": "bool",
-			"name": "Pre-extract Demo Music (not planned yet)",
+			"name": "Extract demo song",
 			"default": false,
-			"description": "Requires MD Asset Viewer and Muse Dash Assets. Pre-extract Muse Dash Demo songs (or preview songs) so that you can browse freely (These thing take about 2,2 GB storage for all songs). remind me to change this into a custom button ,"
+			"description": "Requires MD Asset Viewer. Extract Muse Dash demo song (and plays it) (if possible)."
+		},
+		"mdm-title": {
+			"type": "title",
+			"name": "Muse Dash Map Compability"
+		},
+		"mdm-extract-demo": {
+			"type": "bool",
+			"name": "Extract demo song",
+			"default": false,
+			"description": "Extract MDM demo song (and plays it) (if possible)."
 		}
 	}
 }

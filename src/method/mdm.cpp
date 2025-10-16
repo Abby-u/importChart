@@ -13,11 +13,11 @@ std::vector<notestruct> durnotes;
 using namespace geode::prelude;
 
 int getPathway(std::string lane){
-    if (lane == "11"||lane=="51"||lane=="D1"){
+    if (lane == "11"||lane == "31"||lane=="51"||lane=="D1"){
         return 3;
-    }else if (lane=="12"||lane=="52"||lane=="D2"){
+    }else if (lane=="12"||lane == "32"||lane=="52"||lane=="D2"){
         return 2;
-    }else if (lane=="13"||lane=="53"||lane=="D3"){
+    }else if (lane=="13"||lane == "33"||lane=="53"||lane=="D3"){
         return 1;
     }else if (lane=="15"){
         return 1;
@@ -38,7 +38,7 @@ int findNextSimilarSpeedChanger(int thepathway, double thetime){
     int nearest = -1;
     double dist = sizeof(double);
     for (int i=0;i<speedchanges.size();i++){
-        if ((speedchanges[i].pathway==thepathway||speedchanges[i].pathway==-1)&&speedchanges[i].time>thetime&&(speedchanges[i].time-thetime)<dist){
+        if (speedchanges[i].pathway==thepathway&&speedchanges[i].time>thetime&&(speedchanges[i].time-thetime)<dist){
             nearest = i;
             dist = speedchanges[i].time-thetime;
         }
@@ -51,16 +51,18 @@ void setSpeeds(){
         int nexti = findNextSimilarSpeedChanger(speedchanges[i].pathway,speedchanges[i].time);
         if (nexti==-1){
             for (int j=0;j<tempnotes.size();j++){
-                if ((tempnotes[j].pathway%2==speedchanges[i].pathway||speedchanges[i].pathway==-1)&&tempnotes[j].time>=speedchanges[i].time){
+                if (tempnotes[j].pathway%2==speedchanges[i].pathway&&tempnotes[j].time>=speedchanges[i].time){
                     tempnotes[j].speed = speedchanges[i].speed;
                 }
             }
+            // log::info("{} {} {} to end",speedchanges[i].speed,speedchanges[i].pathway,speedchanges[i].time);
         }else{
             for (int j=0;j<tempnotes.size();j++){
-                if ((tempnotes[j].pathway%2==speedchanges[i].pathway||speedchanges[i].pathway==-1)&&tempnotes[j].time>=speedchanges[i].time&&tempnotes[j].time<speedchanges[nexti].time){
+                if (tempnotes[j].pathway%2==speedchanges[i].pathway&&tempnotes[j].time>=speedchanges[i].time&&tempnotes[j].time<speedchanges[nexti].time){
                     tempnotes[j].speed = speedchanges[i].speed;
                 }
             }
+            // log::info("{} {} {} to {}",speedchanges[i].speed,speedchanges[i].pathway,speedchanges[i].time,speedchanges[nexti].time);
         }
     }
 }
@@ -143,7 +145,7 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                 double thisdur = 0.0;
                 double ratio = static_cast<double>(i)/static_cast<double>(bms.size()-1);
                 double temptime = (ratio+beat)*(timeperbeat*4);//time
-                log::info("{} {} {} {}",temptime,i,bms.size()-1,ratio);
+                // log::info("{} {} {} {}",temptime,i,bms.size()-1,ratio);
                 if (note=="0F"||note=="0G"||note=="16"||note=="17"){
                     if (lane.substr(0,1)=="1"||lane.substr(0,1)=="D"){
                         notestruct thisnote ={
@@ -178,7 +180,7 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                             durnotes.push_back(thisnote);
                         }
                     }
-                }else if ("0O"<note&&note<"0W"){
+                }else if ("0O"<=note&&note<="0W"){
                     int changePathInt = 0;
                     int thespeed = 1;
                     
@@ -193,14 +195,34 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                     }else if(note=="0Q"||note=="0T"||note=="0W"){
                         thespeed = 3;
                     }
-                    notestruct thisnote ={
-                        note,
-                        temptime,
-                        thisdur,
-                        changePathInt,
-                        thespeed
-                    };
-                    speedchanges.push_back(thisnote);
+
+                    if (changePathInt==-1){
+                        notestruct thisnoteup ={
+                            note,
+                            temptime,
+                            thisdur,
+                            1,
+                            thespeed
+                        };
+                        speedchanges.push_back(thisnoteup);
+                        notestruct thisnotedown ={
+                            note,
+                            temptime,
+                            thisdur,
+                            0,
+                            thespeed
+                        };
+                        speedchanges.push_back(thisnotedown);
+                    }else{
+                        notestruct thisnote ={
+                            note,
+                            temptime,
+                            thisdur,
+                            changePathInt,
+                            thespeed
+                        };
+                        speedchanges.push_back(thisnote);
+                    }
                 }else{
                     notestruct thisnote ={
                         note,
@@ -214,10 +236,13 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
             }
         }
     }
-    setSpeeds();
     std::sort(tempnotes.begin(),tempnotes.end(), [](const notestruct& a, const notestruct& b){
         return a.time < b.time;
     });
+    std::sort(speedchanges.begin(),speedchanges.end(), [](const notestruct& a, const notestruct& b){
+        return a.time < b.time;
+    });
+    setSpeeds();
     head thismdm = {
         thisbpm,
         tempnotes

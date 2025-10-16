@@ -196,6 +196,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{8,8,noteObject->groups[noteObject->index].center,0},
 			{9,9,secondObjects->groups[noteObject->index].group,0},
 			{10,10,secondObjects->groups[noteObject->index].center,0},
+			{11,11,(daY==0)?10:11,0},
 			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
@@ -300,7 +301,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 
 		if (thisNote.noteType==6){
 			curPathway = 0;
-			curEnter = thisNote.enter+((daSpeed*(daY+1)))-1;
+			curEnter = thisNote.enter+((daSpeed+(daY*3)))-1;
 		}
 
 		std::vector<ChanceObject> thisRemap = {

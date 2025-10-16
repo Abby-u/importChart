@@ -437,6 +437,8 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					}
 				// @geode-ignore(unknown-resource)
 				}else if(entry.stem().string()=="demo"){
+					if (Mod::get()->getSettingValue<bool>("mdm-extract-demo")!=true){continue;}
+
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
 
 					// @geode-ignore(unknown-resource)

@@ -67,7 +67,7 @@ std::vector<note_data> note_uids = {
     // 1C to 1H r just boss phases
     // skip not planned stuff
 
-    {"21",13,12,23,141,0,44,&ghostDown,&ghostUp},
+    {"21",13,12,23,141,224,44,&ghostDown,&ghostUp},
 
     {"22",99,13,23,141,0,0,&heartDown,&heartUp},
 
