@@ -319,7 +319,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			auto infoSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
 			auto createButton = ButtonSprite::create("Create",0.70f);
 
-			auto infoButton = InfoAlertButton::create("Help","One song can have 1 to 6 (maybe more) maps. The differences are amounts of notes and effects. Map higher than 3 is usually a hidden chart",1.0f);
+			auto infoButton = InfoAlertButton::create("Info","One song can have 1 to 6 (maybe more) maps. The differences are amounts of notes and effects. Map higher than 3 is usually a hidden chart. Click on difficulty faces to select.",1.0f);
 			defMenu->addChild(infoButton);
 
 			CCPoint pos = {380.0f,230.0f};
@@ -345,6 +345,10 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			demo->release();
 			demo = nullptr;
 			geode::Popup<matjson::Value const&>::onClose(sender);
+			auto popup = optionPopup::create();
+			popup->m_noElasticity = true;
+			popup->setID("importChartPopup");
+			popup->show();
 		}
 	public:
 		static mdChartsPopup* create(matjson::Value the){
@@ -374,21 +378,6 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					}
 				}
 			}
-			// auto infoIndex = std::find_if(test.begin(),test.end(), [&](const int& i){
-			// 	return
-			// });
-			// log::info("{}",theunzip.value().getEntries());
-			
-				// auto ext = entry.extension();
-				// log::info("{}",ext)
-				// if (!tbyte.empty()) {
-				// 	std::string 
-				// 	// log::info("{}", readStr);
-				// } else {
-				// 	log::warn("extracted entry is empty");
-				// }
-			
-
 			this->setTitle("Select Map");
 			auto menu = CCMenu::create();
 			auto defMenu = this->m_closeBtn->getParent();
@@ -414,12 +403,9 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 			for (auto const& entry : theunzip.value().getEntries()){
 				if (entry.extension()==".bms"){
-					// auto file = geode::utils::file::readJson(pathValue.asString().unwrap()).unwrap();
-					std::string mapname = utills::string::wideToUtf8(songname)+" "+entry.stem().string();
-					// int sumnotes = file["notes"].size();
+					// std::wstring mapname = songname+L" "+entry.stem().wstring();
 					int diff = getmapNumber(entry.stem().string());
-					// auto face = CCSprite::createWithSpriteFrameName(getfaces(diff));
-					std::string thedesignr = (!songdata.isNull())?( (songdata.contains("levelDesigner"+std::to_string(diff)))?songdata["levelDesigner"+std::to_string(diff)].asString().unwrap():songdata["levelDesigner"].asString().unwrap() ):" ";
+					std::string thedesignr = (!songdata.isNull())?( (songdata.contains("levelDesigner"+std::to_string(diff))&&songdata["levelDesigner"+std::to_string(diff)].asString().unwrap()!="Your Name")?songdata["levelDesigner"+std::to_string(diff)].asString().unwrap():songdata["levelDesigner"].asString().unwrap() ):" ";
 					std::string theMdDiff = (!songdata.isNull()&&songdata.contains("difficulty"+std::to_string(diff)))?songdata["difficulty"+std::to_string(diff)].asString().unwrap():"??";
 					auto face = (!songdata.isNull())?CCSprite::createWithSpriteFrameName(getfacesmdm(theMdDiff)):CCSprite::createWithSpriteFrameName(getfaces(diff));
 					auto damenu = CCMenu::create();
@@ -433,7 +419,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					
 					auto cell = CCNode::create();
 					cell->setContentWidth(360.0f);
-					auto title = CCLabelBMFont::create(cleanName(mapname).c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentLeft);
+					auto title = CCLabelBMFont::create((utils::string::wideToUtf8(songname)+" "+entry.stem().string()).c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentLeft);
 					auto designer = CCLabelBMFont::create((thedesignr).c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentLeft);
 					auto mdDiff = CCLabelBMFont::create((theMdDiff).c_str(),"bigFont.fnt",1000,CCTextAlignment::kCCTextAlignmentRight);
 
@@ -455,20 +441,20 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 				// @geode-ignore(unknown-resource)
 				}else if(entry.stem().string()=="music"){
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
-
+					// unfortunately it cant handle widestring
 					// @geode-ignore(unknown-resource)
-					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_music"+entry.extension().string()));
+					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname+L"_music"+entry.extension().wstring()));
 					log::info("{}",thesongpath.string());
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
-						auto result = geode::utils::clipboard::write(thesongpath.generic_string());
+						auto result = geode::utils::clipboard::write(utils::string::wideToUtf8(thesongpath));
 						if (result){
 							notif("Copied song directory","GJ_infoIcon_001.png");
 						}else{
 							log::warn("cant write to clipboard");
 						}
 					}else{
-						log::warn("cant extract ogg");
+						log::warn("cant extract music ogg");
 					}
 				// @geode-ignore(unknown-resource)
 				}else if(entry.stem().string()=="demo"){
@@ -477,13 +463,13 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					auto rawbyte = theunzip.value().extract(entry).unwrap();
 
 					// @geode-ignore(unknown-resource)
-					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname)+("_demo"+entry.extension().string()));
+					std::filesystem::path thesongpath = Mod::get()->getConfigDir()/(utills::string::wideToUtf8(songname+L"_demo"+entry.extension().wstring()));
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
 						demochannel->stop();
 						demo->release();
 						demo = nullptr;
-						FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(thesongpath.generic_string().c_str(),FMOD_CREATESTREAM|FMOD_LOOP_NORMAL,nullptr,&demo);
+						FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(utils::string::wideToUtf8(thesongpath.wstring()).c_str(),FMOD_CREATESTREAM|FMOD_LOOP_NORMAL,nullptr,&demo);
 						if (test2 == FMOD_OK){
 							FMOD_RESULT reult = FMODAudioEngine::sharedEngine()->m_system->playSound(demo,nullptr,false,&demochannel);
 							if (reult == FMOD_OK){
@@ -495,7 +481,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 							log::warn("cant create audiostream");
 						}
 					}else{
-						log::warn("cant extract ogg");
+						log::warn("cant extract demo ogg");
 					}
 				}
 				i++;
@@ -516,7 +502,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			auto infoSprite = CCSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
 			auto createButton = ButtonSprite::create("Create",0.70f);
 
-			auto infoButton = InfoAlertButton::create("Help","One song can have 1 to 6 (maybe more) maps. The differences are amounts of notes and effects. Map higher than 3 is usually a hidden chart",1.0f);
+			auto infoButton = InfoAlertButton::create("Info","One song can have 1 to 6 (maybe more) maps. The differences are amounts of notes and effects. Map higher than 3 is usually a hidden chart. Click on difficulty faces to select.",1.0f);
 			defMenu->addChild(infoButton);
 
 			CCPoint pos = {380.0f,230.0f};
@@ -543,6 +529,10 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			demo->release();
 			demo = nullptr;
 			geode::Popup<std::wstring>::onClose(sender);
+			auto popup = optionPopup::create();
+			popup->m_noElasticity = true;
+			popup->setID("importChartPopup");
+			popup->show();
 		}
 	public:
 		static mdmChartsPopup* create(std::wstring songname){
