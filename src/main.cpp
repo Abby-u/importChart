@@ -248,6 +248,9 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			int i = 0;
 
 			for (auto const& pathValue : filepaths.asArray().unwrap()){
+				log::info("{}",std::filesystem::path(pathValue.asString().unwrap()).stem().string().substr(
+					std::filesystem::path(pathValue.asString().unwrap()).stem().string().size()-4
+				));
 				if (std::filesystem::path(pathValue.asString().unwrap()).extension()==".json"){
 					auto file = geode::utils::file::readJson(pathValue.asString().unwrap()).unwrap();
 					std::string mapname = file["mapName"].asString().unwrap();
@@ -280,10 +283,32 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					scrollable->m_contentLayer->addChild(cell,diff,i);
 					diffNotes->addObject(cell);
 					i++;
-				}else if (std::filesystem::path(pathValue.asString().unwrap()).extension()==".ogg"){
+				}else if (std::filesystem::path(pathValue.asString().unwrap()).stem().string().substr(
+					std::filesystem::path(pathValue.asString().unwrap()).stem().string().size()-5
+				)=="music"){
+					
 					auto result = geode::utils::clipboard::write(pathValue.asString().unwrap());
 					if (result){
 						notif("Copied song directory","GJ_infoIcon_001.png");
+					}
+				}
+				else if (std::filesystem::path(pathValue.asString().unwrap()).stem().string().substr(
+					std::filesystem::path(pathValue.asString().unwrap()).stem().string().size()-4
+				)=="demo"){
+					if (Mod::get()->getSettingValue<bool>("md-extract-demo")!=true){continue;}
+					demochannel->stop();
+					demo->release();
+					demo = nullptr;
+					FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(pathValue.asString().unwrap().c_str(),FMOD_CREATESTREAM|FMOD_LOOP_NORMAL,nullptr,&demo);
+					if (test2 == FMOD_OK){
+						FMOD_RESULT reult = FMODAudioEngine::sharedEngine()->m_system->playSound(demo,nullptr,false,&demochannel);
+						if (reult == FMOD_OK){
+							log::info("demo play");
+						}else{
+							log::warn("demo fail");
+						}
+					}else{
+						log::warn("cant create audiostream");
 					}
 				}
 			}
@@ -310,6 +335,16 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			sAxis->apply(scrollable->m_contentLayer);
 
 			return true;
+		}
+		void onClose(CCObject* sender) override {
+			// if (demochannel) 
+			// if (demo) {
+			// 	
+			// }
+			demochannel->stop();
+			demo->release();
+			demo = nullptr;
+			geode::Popup<matjson::Value const&>::onClose(sender);
 		}
 	public:
 		static mdChartsPopup* create(matjson::Value the){
@@ -613,21 +648,12 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		}
 		std::string readStr(reinterpret_cast<const char*>(stringbyte.data()), stringbyte.size());
 		int res = mdmChart(GameManager::sharedState()->getEditorLayer(),std::move(readStr));
-		log::info("{}",res);
+		// log::info("{}",res);
 		if (res==0){
 			demochannel->stop();
 			demo->release();
 			demo = nullptr;
 		}
-		// auto tbyte = content.extract(entry).unwrap();
-		// auto ext = entry.extension();
-		// log::info("{}",ext)
-		// if (!tbyte.empty()) {
-		// 	std::string readStr(reinterpret_cast<const char*>(tbyte.data()), tbyte.size());
-		// 	// log::info("{}", readStr);
-		// } else {
-		// 	log::warn("extracted entry is empty");
-		// }
 
 	}
 
@@ -636,7 +662,7 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		// log::info("{} {}",obj->getTag(),thefilepaths.dump());
 		auto content = geode::utils::file::readJson( std::filesystem::path( thefilepaths.asArray().unwrap()[obj->getTag()].asString().unwrap() ) ).unwrap();
 		int res = MDchart(GameManager::sharedState()->getEditorLayer(),content,head{});
-		if (res){
+		if (res==0){
 			demochannel->stop();
 			demo->release();
 			demo = nullptr;
