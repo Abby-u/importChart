@@ -575,6 +575,26 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
     		24.f,
     		1.f     
 		);
+		// auto copySprite = ButtonSprite::create(
+		// 	"Copy Area Value",
+		// 	40,
+    	// 	true,
+    	// 	"bigFont.fnt",
+    	// 	// @geode-ignore(unknown-resource)
+    	// 	"GJ_button_04-uhd.png",
+    	// 	24.f,
+    	// 	1.f     
+		// );
+		// auto pasteSprite = ButtonSprite::create(
+		// 	"Paste Area Value",
+		// 	40,
+    	// 	true,
+    	// 	"bigFont.fnt",
+    	// 	// @geode-ignore(unknown-resource)
+    	// 	"GJ_button_04-uhd.png",
+    	// 	24.f,
+    	// 	1.f     
+		// );
 
 		auto importButton = CCMenuItemSpriteExtra::create(
 			sprite, actionsButtons, menu_selector(editedPauseLayer::initImportChartPopup)
@@ -582,12 +602,24 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		auto remapButton = CCMenuItemSpriteExtra::create(
 			sprite2, actionsButtons, menu_selector(editedPauseLayer::showSpawnRemap)
 		);
+		// auto copyButton = CCMenuItemSpriteExtra::create(
+		// 	copySprite, actionsButtons, menu_selector(editedPauseLayer::showSpawnRemap)
+		// );
+		// auto pasteButton = CCMenuItemSpriteExtra::create(
+		// 	pasteSprite, actionsButtons, menu_selector(editedPauseLayer::showSpawnRemap)
+		// );
 
 		importButton->setID("import-chart"_spr);
 		actionsButtons->addChild(importButton,0,-1);
 
 		remapButton->setID("spawn-remap"_spr);
 		actionsButtons->addChild(remapButton,0,-1);
+
+		// copyButton->setID("copy"_spr);
+		// actionsButtons->addChild(copyButton,0,-1);
+
+		// pasteButton->setID("paste"_spr);
+		// actionsButtons->addChild(pasteButton,0,-1);
 
 		actionsButtons->updateLayout(true);
 

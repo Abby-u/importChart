@@ -151,6 +151,36 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		return;
 	}
 
+	if (thisNote.spawnGroup==317){// normal note
+		objectsData* noteObject = (daY==0)?thisNote.objDown:thisNote.objUp;
+		findUnusedObject(noteObject,daX,daDur);
+		
+		int curPos = thisNote.pos+(daSpeed-1);
+		int curSpeed = thisNote.speed+(daSpeed-1);
+		int curEnter = thisNote.enter+((daSpeed+(daY*3)))-1;
+		int curPathway = thisNote.bossAction+((daSpeed+(daY*3)))-1;
+
+		std::vector<ChanceObject> thisRemap = {
+			{1,1,noteObject->groups[noteObject->index].group,0},
+			{2,2,curPos,0},
+			{3,3,noteObject->groups[noteObject->index].center,0},
+			{4,4,curPathway,0},
+			{5,5,(daY==0)?66:67,0},
+			{6,6,(daY==0)?99:97,0},
+			{7,7,curEnter,0},
+			{17,17,curSpeed,0},
+			{41,41,thisNote.sound,0}
+		};
+
+		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
+		if (trigger){
+			trigger->m_targetGroupID = thisNote.spawnGroup;
+			trigger->m_remapObjects = thisRemap;
+		}
+		return;
+	}
+
+
 	if (thisNote.spawnGroup==179){// masher
 		objectsData* noteObject = thisNote.objDown;
 		findUnusedObject(noteObject,daX,daDur);

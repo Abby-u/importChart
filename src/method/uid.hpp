@@ -18,6 +18,7 @@ struct note_data{
     objectsData* objUp;
     objectsData* endNoteDown; // for hold notes
     objectsData* endNoteUp;
+    int bossAction;
 };
 
 extern std::vector<note_data> note_uids;

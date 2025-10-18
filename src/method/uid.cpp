@@ -48,12 +48,9 @@ std::vector<note_data> note_uids = {
 
     // {"11",} boss attack1
     // {"12",} boss attack2
-    // {"13",} boss note1
-    {"13",13,1,23,141,0,43,&smallDown,&smallUp}, // temp
-    // {"14",} boss note2
-    {"14",13,2,23,141,0,44,&med1Down,&med1Up}, // temp
-    // {"15",} boss note3
-    {"15",13,3,23,141,0,44,&med2Down,&med2Up}, // temp
+    {"13",317,12,23,141,325,43,&bossProjectile1Down,&bossProjectile1Up,nullptr,nullptr,337},
+    {"14",317,13,23,141,331,44,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
+    {"15",317,14,23,141,331,44,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
 
     //boss masher
     {"16",179,10,23,141,0,0,&masherDown}, // temp
@@ -62,7 +59,14 @@ std::vector<note_data> note_uids = {
     // boss give gears
     {"18",84,11,23,141,0,0,&gearDown,&gearUp}, // temp
 
-    // {"1A",} boss in
+    {"1A",290,65},
+    {"1B",306,65},
+    {"1C",291,65},
+    {"1D",293,65},
+    {"1E",295,65},
+    {"1F",300,65},
+    {"1G",302,65},
+    {"1H",304,65},
     // {"1B",} boss out
     // 1C to 1H r just boss phases
     // skip not planned stuff
@@ -75,8 +79,8 @@ std::vector<note_data> note_uids = {
 
     {"1J",237,50},
     {"1K",238,51},
-    {"1L",0,52},
-    {"1M",0,53},
+    {"1L",309,52},
+    {"1M",310,53},
 
     {"1O",239,54},
     {"1P",240,54},
