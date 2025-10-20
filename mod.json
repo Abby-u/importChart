@@ -68,5 +68,10 @@
 			"default": false,
 			"description": "Extract MDM demo song (and plays it) (if possible)."
 		}
+	},
+	"resources": {
+		"files": [
+			"resources/notedata.json"
+		]
 	}
 }

@@ -46,8 +46,8 @@ std::vector<note_data> note_uids = {
     // {"0I",} upside down raider not planned
     // {"0J",} same as hammer
 
-    // {"11",} boss attack1
-    // {"12",} boss attack2
+    {"11",369,16,23,141,372,45,&bossMelee},
+    {"12",369,17,23,141,373,45,&bossMelee},
     {"13",317,12,23,141,325,43,&bossProjectile1Down,&bossProjectile1Up,nullptr,nullptr,337},
     {"14",317,13,23,141,331,44,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
     {"15",317,14,23,141,331,44,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
@@ -57,7 +57,7 @@ std::vector<note_data> note_uids = {
     {"17",179,10,23,141,0,0,&masherDown}, // temp
 
     // boss give gears
-    {"18",84,11,23,141,0,0,&gearDown,&gearUp}, // temp
+    {"18",84,15,23,141,0,0,&gearDown,&gearUp}, // temp
 
     {"1A",290,65},
     {"1B",306,65},
@@ -67,9 +67,6 @@ std::vector<note_data> note_uids = {
     {"1F",300,65},
     {"1G",302,65},
     {"1H",304,65},
-    // {"1B",} boss out
-    // 1C to 1H r just boss phases
-    // skip not planned stuff
 
     {"21",13,12,23,141,224,44,&ghostDown,&ghostUp},
 

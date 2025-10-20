@@ -7,10 +7,12 @@ struct notestruct {
     double duration;
     int pathway;
     int speed;
+    std::string scene;
 };
 
 struct head{
     double bpm;
+    std::string stage;
     std::vector<notestruct> notes;
 };
 

@@ -9,6 +9,7 @@
 std::vector<notestruct> tempnotes;
 std::vector<notestruct> speedchanges;
 std::vector<notestruct> durnotes;
+std::vector<notestruct> scenechanges;
 
 using namespace geode::prelude;
 
@@ -46,6 +47,18 @@ int findNextSimilarSpeedChanger(int thepathway, double thetime){
     return nearest;
 }
 
+int findNextSimilarSceneChanger(double thetime){
+    int nearest = -1;
+    double dist = sizeof(double);
+    for (int i=0;i<scenechanges.size();i++){
+        if (scenechanges[i].time>thetime&&(scenechanges[i].time-thetime)<dist){
+            nearest = i;
+            dist = scenechanges[i].time-thetime;
+        }
+    }
+    return nearest;
+}
+
 void setSpeeds(){
     for (int i=0;i<speedchanges.size();i++){
         int nexti = findNextSimilarSpeedChanger(speedchanges[i].pathway,speedchanges[i].time);
@@ -55,16 +68,46 @@ void setSpeeds(){
                     tempnotes[j].speed = speedchanges[i].speed;
                 }
             }
-            // log::info("{} {} {} to end",speedchanges[i].speed,speedchanges[i].pathway,speedchanges[i].time);
         }else{
             for (int j=0;j<tempnotes.size();j++){
                 if (tempnotes[j].pathway%2==speedchanges[i].pathway&&tempnotes[j].time>=speedchanges[i].time&&tempnotes[j].time<speedchanges[nexti].time){
                     tempnotes[j].speed = speedchanges[i].speed;
                 }
             }
-            // log::info("{} {} {} to {}",speedchanges[i].speed,speedchanges[i].pathway,speedchanges[i].time,speedchanges[nexti].time);
         }
     }
+}
+
+void setScenes(){
+    for (int i=0;i<scenechanges.size();i++){
+        int nexti = findNextSimilarSceneChanger(scenechanges[i].time);
+        if (nexti==-1){
+            for (int j=0;j<tempnotes.size();j++){
+                if (tempnotes[j].time>=scenechanges[i].time){
+                    tempnotes[j].scene = scenechanges[i].scene;
+                }
+            }
+        }else{
+            for (int j=0;j<tempnotes.size();j++){
+                if (tempnotes[j].time>=scenechanges[i].time&&tempnotes[j].time<scenechanges[nexti].time){
+                    tempnotes[j].scene = scenechanges[i].scene;
+                }
+            }
+        }
+    }
+}
+
+std::string getScene(std::string note){
+    if (note=="1O") return "scene_01";
+    if (note=="1P") return "scene_02";
+    if (note=="1Q") return "scene_03";
+    if (note=="1R") return "scene_04";
+    if (note=="1S") return "scene_05";
+    if (note=="1T") return "scene_06";
+    if (note=="1U") return "scene_07";
+    if (note=="1V") return "scene_08";
+    if (note=="1W") return "scene_09";
+    return "";
 }
 
 int mdmChart(LevelEditorLayer* editor, std::string rawdata){
@@ -77,19 +120,15 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
     tempnotes.clear();
     durnotes.clear();
     speedchanges.clear();
+    scenechanges.clear();
 
     std::istringstream stream(rawdata);
     std::string line;
-    int section = 0;
-    std::regex bpmr("#BPM ([+-]?(?=\\.\\d|\\d)(?:\\d+)?(?:\\.?\\d*))(?:[Ee]([+-]?\\d+))?");
-    std::regex datafield("\\*-+ MAIN DATA FIELD");
 
-    std::regex sectionsr("#[0-9]+:[A-Za-z0-9]+");
-    double timestep;
     int lane;
 
     int curspeed = 1;
-    int curpathway =0;
+    std::string curscene;
 
     double timeperbeat;
 
@@ -127,6 +166,14 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                 }
                 continue;
             }
+            if (key == "GENRE") {
+                try {
+                    curscene = value;
+                } catch (const std::exception&) {
+                    continue;
+                }
+                continue;
+            }
 
         }else if (line.find(':')){
             std::vector<std::string> splitline = utils::string::split(line,":");
@@ -153,7 +200,8 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                             temptime,
                             0.001,
                             pathway,
-                            curspeed
+                            curspeed,
+                            curscene
                         };
                         tempnotes.push_back(thisnote);
                     }else{
@@ -165,7 +213,8 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                                 durnotes[j].time,
                                 thisdur,
                                 durnotes[j].pathway,
-                                curspeed
+                                curspeed,
+                                curscene
                             };
                             tempnotes.push_back(thisnote);
                             durnotes.erase(durnotes.begin() + j);
@@ -175,7 +224,8 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                                 temptime,
                                 thisdur,
                                 pathway,
-                                curspeed
+                                curspeed,
+                                curscene
                             };
                             durnotes.push_back(thisnote);
                         }
@@ -202,7 +252,8 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                             temptime,
                             thisdur,
                             1,
-                            thespeed
+                            thespeed,
+                            curscene
                         };
                         speedchanges.push_back(thisnoteup);
                         notestruct thisnotedown ={
@@ -210,7 +261,8 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                             temptime,
                             thisdur,
                             0,
-                            thespeed
+                            thespeed,
+                            curscene
                         };
                         speedchanges.push_back(thisnotedown);
                     }else{
@@ -219,17 +271,29 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                             temptime,
                             thisdur,
                             changePathInt,
-                            thespeed
+                            thespeed,
+                            curscene
                         };
                         speedchanges.push_back(thisnote);
                     }
+                }else if ("1O"<=note&&note<="1W"){
+                    notestruct thisnote ={
+                        note,
+                        temptime,
+                        thisdur,
+                        pathway,
+                        curspeed,
+                        getScene(note)
+                    };
+                    scenechanges.push_back(thisnote);
                 }else{
                     notestruct thisnote ={
                         note,
                         temptime,
                         thisdur,
                         pathway,
-                        curspeed
+                        curspeed,
+                        curscene
                     };
                     tempnotes.push_back(thisnote);
                 }
@@ -242,9 +306,14 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
     std::sort(speedchanges.begin(),speedchanges.end(), [](const notestruct& a, const notestruct& b){
         return a.time < b.time;
     });
+    std::sort(scenechanges.begin(),scenechanges.end(), [](const notestruct& a, const notestruct& b){
+        return a.time < b.time;
+    });
     setSpeeds();
+    setScenes();
     head thismdm = {
         thisbpm,
+        curscene,
         tempnotes
     };
     int res = MDchart(GameManager::sharedState()->getEditorLayer(),nullptr,thismdm);

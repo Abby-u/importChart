@@ -48,6 +48,7 @@ extern objectsData bossProjectile2Up;
 extern objectsData bossProjectile2Down;
 extern objectsData bossProjectile3Up;
 extern objectsData bossProjectile3Down;
+extern objectsData bossMelee;
 extern objectsData bossGearUp;
 extern objectsData bossGearDown;
 extern objectsData pItemUp;

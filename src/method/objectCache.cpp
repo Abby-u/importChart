@@ -807,6 +807,43 @@ objectsData bossProjectile3Up = {
     }
 };
 
+objectsData bossMelee = {
+    0,
+    -100,
+    {
+        {3080,3110},
+        {3081,3111},
+        {3082,3112},
+        {3083,3113},
+        {3084,3114},
+        {3085,3115},
+        {3086,3116},
+        {3087,3117},
+        {3088,3118},
+        {3089,3119},
+        {3090,3120},
+        {3091,3121},
+        {3092,3122},
+        {3093,3123},
+        {3094,3124},
+        {3095,3125},
+        {3096,3126},
+        {3097,3127},
+        {3098,3128},
+        {3099,3129},
+        {3100,3130},
+        {3101,3131},
+        {3102,3132},
+        {3103,3133},
+        {3104,3134},
+        {3105,3135},
+        {3106,3136},
+        {3107,3137},
+        {3108,3138},
+        {3109,3139},
+    }
+};
+
 void deleteLastUsed(objectsData* theobjects){
     for (int i=0;i<theobjects->groups.size();i++){
         theobjects->groups[i].dur = -100;
@@ -845,4 +882,11 @@ void resetObjectsData(){
     deleteLastUsed(&heartUp);
     deleteLastUsed(&masherDown);
     deleteLastUsed(&masherUp);
+    deleteLastUsed(&bossProjectile1Down);
+    deleteLastUsed(&bossProjectile1Up);
+    deleteLastUsed(&bossProjectile2Down);
+    deleteLastUsed(&bossProjectile2Up);
+    deleteLastUsed(&bossProjectile3Down);
+    deleteLastUsed(&bossProjectile3Up);
+    deleteLastUsed(&bossMelee);
 }
