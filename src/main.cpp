@@ -472,6 +472,8 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 						FMOD_RESULT test2 = FMODAudioEngine::sharedEngine()->m_system->createSound(utils::string::wideToUtf8(thesongpath.wstring()).c_str(),FMOD_CREATESTREAM|FMOD_LOOP_NORMAL,nullptr,&demo);
 						if (test2 == FMOD_OK){
 							FMOD_RESULT reult = FMODAudioEngine::sharedEngine()->m_system->playSound(demo,nullptr,false,&demochannel);
+							// unsigned int* length;
+							// FMOD_RESULT the = demo->getLength(length,FMOD_TIMEUNIT_MS);
 							if (reult == FMOD_OK){
 								log::info("demo play");
 							}else{
@@ -632,17 +634,17 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		if (objects->count()<0){return;}
 		for (int i=0;i<objects->count();i++){
 			auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
-			if (object->m_objectID==1268){
-				auto remaps = static_cast<SpawnTriggerGameObject*>(object)->m_remapObjects;
-				auto keys = static_cast<SpawnTriggerGameObject*>(object)->m_remapKeys;
-				for (auto thej = remaps.begin(); thej != remaps.end(); ++thej){
-					log::info("object remaps: {} {} {} {}",thej->m_groupID,thej->m_oldGroupID,thej->m_chance,thej->m_unk00c);
-				}
-				for (auto thej2 = keys.begin(); thej2 != keys.end(); ++thej2){
-					log::info("key remaps: {}",*thej2);
-				}
-			}
-			log::info(" ");
+			// if (object->m_objectID==1268){
+			// 	auto remaps = static_cast<SpawnTriggerGameObject*>(object)->m_remapObjects;
+			// 	auto keys = static_cast<SpawnTriggerGameObject*>(object)->m_remapKeys;
+			// 	for (auto thej = remaps.begin(); thej != remaps.end(); ++thej){
+			// 		log::info("object remaps: {} {} {} {}",thej->m_groupID,thej->m_oldGroupID,thej->m_chance,thej->m_unk00c);
+			// 	}
+			// 	for (auto thej2 = keys.begin(); thej2 != keys.end(); ++thej2){
+			// 		log::info("key remaps: {}",*thej2);
+			// 	}
+			// }
+			log::info("{}",object->m_linkedGroup);
 		}
 	}
 

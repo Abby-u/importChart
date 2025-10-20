@@ -168,7 +168,7 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
             }
             if (key == "GENRE") {
                 try {
-                    curscene = value;
+                    curscene = value.substr(0,8);
                 } catch (const std::exception&) {
                     continue;
                 }

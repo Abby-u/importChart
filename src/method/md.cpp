@@ -14,11 +14,9 @@ std::vector<int> overflowObjects;
 
 std::optional<double> lastFlashTime;
 std::optional<CCPoint> lastFlashPos;
+bool flashStart = false;
 
 int curBossPhase = -1;
-
-matjson::Value *mddataP;
-head *mdmdataP;
 
 note_data getNoteData(std::string daUid){
 	std::string thisUid = daUid;
@@ -45,6 +43,22 @@ int getBossPhase(int group){
 		case 343: return 2;
 		default: return -2;
 	}
+}
+
+int getSceneGroup(std::string scene){
+    if (scene=="scene_01") return 239;
+    if (scene=="scene_02") return 240;
+    if (scene=="scene_03") return 241;
+    if (scene=="scene_04") return 242;
+    if (scene=="scene_05") return 243;
+    if (scene=="scene_06") return 244;
+    if (scene=="scene_07") return 245;
+    if (scene=="scene_08") return 246;
+    if (scene=="scene_09") return 247;
+	if (scene=="scene_10") return 383;
+	if (scene=="scene_11") return 384;
+	if (scene=="scene_12") return 385;
+    return 0;
 }
 
 int getBossPhaseSpawn(int from,int to){
@@ -81,7 +95,7 @@ void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 	for (int i = 0;i<daObjects->groups.size();i++){
 		if (!daObjects->groups[i].lastUsed||
 			((theX)-(daObjects->groups[i].lastUsed)>2.1&&
-			(theX)-(daObjects->groups[i].lastUsed+daObjects->groups[i].dur)>2.1)||daObjects->groups[i].lastUsed>theX){
+			(theX)-(daObjects->groups[i].lastUsed+daObjects->groups[i].dur)>2.1)){
 			daObjects->index = i;
 			daObjects->groups[i].lastUsed = theX;
 			daObjects->groups[i].dur = theDur;
@@ -102,6 +116,16 @@ void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 		if (!foundSimilar){
 			overflowObjects.push_back(daObjects->groups[0].group);
 		}
+	}
+}
+
+void setInitScene(std::string scene){
+	log::info("{}.",scene);
+	auto ui = GameManager::sharedState()->getEditorLayer()->m_editorUI;
+	auto obj = ui->createObject(spawnID,{0,(float)Ypos});
+	auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
+	if (trigger){
+		trigger->m_targetGroupID = getSceneGroup(scene);
 	}
 }
 
@@ -180,10 +204,15 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			if (ibms_id=="2I"){
 				lastFlashTime = daX;
 				lastFlashPos = pos;
+				flashStart = true;
 			}else if (ibms_id=="2J"){
 				if (!lastFlashPos.has_value()){
 					lastFlashPos = {(float)Xpos,(float)Ypos};
 					lastFlashTime = 0.0;
+				}
+				if (!flashStart){
+					lastFlashPos = {(float)pos.x-1,(float)pos.y};
+					lastFlashTime = daX;
 				}
 				auto color = ui->createObject(899,lastFlashPos.value());
 				auto colort = static_cast<EffectGameObject*>(color);
@@ -194,6 +223,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 				}
 				lastFlashTime = daX;
 				lastFlashPos = pos;
+				flashStart = false;
 			}else if (ibms_id=="2K"){
 				auto color = ui->createObject(899,lastFlashPos.value());
 				auto colort = static_cast<EffectGameObject*>(color);
@@ -533,12 +563,13 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data = nullptr, head mdmdat
     Xpos = 0.0;
     noteOffset = (1.451/0.09628343)*-1;
     daTime = 0;
+	std::string curscene;
 	if (data!=nullptr){
 		bpm = data["bpm"].asDouble().unwrap();
-		mddataP = &data;
+		curscene = data["scene"].asString().unwrap();
 	}else if (!mdmdata.notes.empty()){
 		bpm = mdmdata.bpm;
-		mdmdataP = &mdmdata;
+		curscene = mdmdata.stage;
 	}else{
 		log::warn("none");
 		return 1;
@@ -560,6 +591,7 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data = nullptr, head mdmdat
 		Ypos = minY;
 		Xpos = minX;
 	}
+	setInitScene(curscene);
 	if (data!=nullptr){
 		for (const auto& [a, b]:data["notes"].asArray
 			().unwrap()){
