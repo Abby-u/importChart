@@ -39,7 +39,7 @@ std::vector<note_data> note_uids = {
 
     {"0F",104,9,23,141,0,46,&holdDown,&holdUp,&holdDownEnd,&holdUpEnd},
 
-    {"0G",179,10,23,141,0,0,&masherDown},
+    {"0G",179,10,23,141,387,0,&masherDown},
 
     {"0H",84,11,23,141,0,0,&gearDown,&gearUp},
 
@@ -52,11 +52,9 @@ std::vector<note_data> note_uids = {
     {"14",317,13,23,141,331,44,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
     {"15",317,14,23,141,331,44,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
 
-    //boss masher
-    {"16",179,10,23,141,0,0,&masherDown}, // temp
-    {"17",179,10,23,141,0,0,&masherDown}, // temp
+    {"16",179,18,364,141,0,360,&bossMasher}, // temp
+    {"17",179,18,380,141,0,393,&bossMasherExit}, // temp
 
-    // boss give gears
     {"18",84,15,23,141,0,0,&gearDown,&gearUp}, // temp
 
     {"1A",290,65},

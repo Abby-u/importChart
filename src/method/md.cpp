@@ -41,6 +41,10 @@ int getBossPhase(int group){
 		case 304: return 1;
 		case 337: return 1;
 		case 343: return 2;
+		case 360: return 0;
+		case 362: return 0;
+		case 382: return 0;
+		case 393: return -1;
 		default: return -2;
 	}
 }
@@ -129,26 +133,29 @@ void setInitScene(std::string scene){
 	}
 }
 
-void checkBossPhase(int targetPhase, double time){
+void checkBossPhase(int targetPhase, double time, bool withoffset = true, bool forcechange = false, int group = 0, bool bossExit = false){
 	auto ui = GameManager::sharedState()->getEditorLayer()->m_editorUI;
-	if (curBossPhase!=targetPhase){
-		if (std::abs(targetPhase-curBossPhase)>1){
-			if (targetPhase>curBossPhase){
-				checkBossPhase(targetPhase-1,time-0.5);
-			}else{
-				checkBossPhase(targetPhase+1,time-0.5);
-			}
+	if (curBossPhase!=targetPhase||forcechange==true){
+		if (targetPhase>1&&curBossPhase==-1){
+			checkBossPhase(targetPhase-1,time-0.5);
+		}else if (targetPhase==-1&&curBossPhase>1){
+			checkBossPhase(targetPhase+1,time-0.5);
 		}
-		if (std::abs(targetPhase-curBossPhase)==1){
-			double objX = ((noteOffset*grid)+(time/1*(grid/timepergrid)))+Xpos;
+		if (std::abs(targetPhase-curBossPhase)<=2&&(targetPhase>-1||curBossPhase>-1||forcechange==true)){
+			double thisoffset = (withoffset==true)?noteOffset:0;
+			double objX = ((thisoffset*grid)+(time/1*(grid/timepergrid)))+Xpos;
 			double objY = ((2*grid)+Ypos);
 			CCPoint pos = {(float)objX,(float)objY};
 			auto obj = ui->createObject(spawnID,pos);
+			int thetarget = getBossPhaseSpawn(curBossPhase,targetPhase);
 			auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 			if (trigger){
-				trigger->m_targetGroupID = getBossPhaseSpawn(curBossPhase,targetPhase);
+				trigger->m_targetGroupID = (thetarget==0)?group:thetarget;
 			}
 			curBossPhase = targetPhase;
+			if (bossExit==true){
+				curBossPhase = -1;
+			}
 			return;
 		}
 		return;
@@ -239,7 +246,10 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			return;
 		}
 		if (thisNote.noteType==65){
-			curBossPhase = getBossPhase(thisNote.spawnGroup);
+			checkBossPhase(getBossPhase(thisNote.spawnGroup),daX,false,true,thisNote.spawnGroup);
+			// curBossPhase = getBossPhase(thisNote.spawnGroup);
+			ui->deleteObject(obj,true);
+			return;
 		}
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
@@ -263,7 +273,6 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			checkBossPhase(0,daX+0.2255);
 		}
 		
-
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
@@ -322,15 +331,25 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		findUnusedObject(noteObject,daX,daDur);
 		
 		int curPathway = (daY==0)?191:192;
-		int curPos = thisNote.pos+(daSpeed-1);
+		int curPos = (daY==0)?23+(daSpeed-1):29+(daSpeed-1);
 		int curSpeed = thisNote.speed+(daSpeed-1);
-		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
+		int curEnter = (daY==0)?0:thisNote.enter+(daSpeed-1);
+		int bossAction = 0;
+		int bossKnock = 0;
+
+		if (thisNote.noteType==18){
+			bool exit = (thisNote.ibms_id=="17")?true:false;
+			checkBossPhase(0,daX-0.5,true,false,0,exit);
+			bossAction = thisNote.sound;
+			bossKnock = thisNote.pos;
+		}
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
-			{4,4,curPathway,0},
+			{4,4,bossAction,0},
+			{5,5,bossKnock,0},
 			{7,7,curEnter,0},
 			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
