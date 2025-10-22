@@ -9,53 +9,57 @@ spawn pos
 speed 1-2-3
 enter animation
 sound to play
+hurt
 objdown
 objup
+objdownend
+objupend
+bossaction
 */
 
 
 std::vector<note_data> note_uids = {
-    {"01",13,1,23,141,0,43,&smallDown,&smallUp},
-    {"02",13,1,26,141,18,43,&smallDown,&smallUp},
-    {"03",13,1,29,141,38,43,&smallDown,&smallUp},
+    {"01",13,1,23,141,0,43,20,&smallDown,&smallUp},
+    {"02",13,1,26,141,18,43,20,&smallDown,&smallUp},
+    {"03",13,1,29,141,38,43,20,&smallDown,&smallUp},
 
-    {"04",13,2,23,141,0,44,&med1Down,&med1Up},
-    {"05",13,2,26,141,18,44,&med1Down,&med1Up},
-    {"06",13,2,29,141,38,44,&med1Down,&med1Up},
+    {"04",13,2,23,141,0,44,30,&med1Down,&med1Up},
+    {"05",13,2,26,141,18,44,30,&med1Down,&med1Up},
+    {"06",13,2,29,141,38,44,30,&med1Down,&med1Up},
 
-    {"07",13,3,23,141,0,44,&med2Down,&med2Up},
-    {"08",13,3,26,141,18,44,&med2Down,&med2Up},
-    {"09",13,3,29,141,38,44,&med2Down,&med2Up},
+    {"07",13,3,23,141,0,44,30,&med2Down,&med2Up},
+    {"08",13,3,26,141,18,44,30,&med2Down,&med2Up},
+    {"09",13,3,29,141,38,44,30,&med2Down,&med2Up},
 
-    {"0A",13,4,23,141,0,45,&large1Down,&large1Up},
+    {"0A",13,4,23,141,0,45,40,&large1Down,&large1Up},
 
-    {"0B",13,5,23,141,0,45,&large2Down,&large2Up},
+    {"0B",13,5,23,141,0,45,40,&large2Down,&large2Up},
 
-    {"0C",13,6,161,164,173,43,&raiderDown,&raiderUp},
+    {"0C",13,6,161,164,173,43,30,&raiderDown,&raiderUp},
 
-    {"0D",144,7,138,158,150,44,&hammerDown,&hammerUp},
+    {"0D",144,7,138,158,150,44,40,&hammerDown,&hammerUp},
 
-    {"0E",13,8,23,141,0,43,&geminiDown,&geminiUp},
+    {"0E",13,8,23,141,0,43,30,&geminiDown,&geminiUp},
 
-    {"0F",104,9,23,141,0,46,&holdDown,&holdUp,&holdDownEnd,&holdUpEnd},
+    {"0F",104,9,23,141,0,46,0,&holdDown,&holdUp,&holdDownEnd,&holdUpEnd},
 
-    {"0G",179,10,23,141,387,0,&masherDown},
+    {"0G",179,10,23,141,387,0,40,&masherDown},
 
-    {"0H",84,11,23,141,0,0,&gearDown,&gearUp},
+    {"0H",84,11,23,141,0,0,30,&gearDown,&gearUp},
 
     // {"0I",} upside down raider not planned
     // {"0J",} same as hammer
 
-    {"11",369,16,23,141,372,45,&bossMelee},
-    {"12",369,17,23,141,373,45,&bossMelee},
-    {"13",317,12,23,141,325,43,&bossProjectile1Down,&bossProjectile1Up,nullptr,nullptr,337},
-    {"14",317,13,23,141,331,44,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
-    {"15",317,14,23,141,331,44,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
+    {"11",369,16,23,141,372,45,50,&bossMelee},
+    {"12",369,17,23,141,373,45,50,&bossMelee},
+    {"13",317,12,23,141,325,43,30,&bossProjectile1Down,&bossProjectile1Up,nullptr,nullptr,337},
+    {"14",317,13,23,141,331,44,30,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
+    {"15",317,14,23,141,331,44,30,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
 
-    {"16",179,18,364,141,0,360,&bossMasher}, // temp
-    {"17",179,18,380,141,0,393,&bossMasherExit}, // temp
+    {"16",179,18,364,141,0,360,30,&bossMasher}, // temp
+    {"17",179,18,380,141,0,393,30,&bossMasherExit}, // temp
 
-    {"18",84,15,23,141,0,0,&gearDown,&gearUp}, // temp
+    {"18",84,15,23,141,0,0,30,&gearDown,&gearUp}, // temp
 
     {"1A",290,65},
     {"1B",306,65},
@@ -66,11 +70,11 @@ std::vector<note_data> note_uids = {
     {"1G",302,65},
     {"1H",304,65},
 
-    {"21",13,12,23,141,224,44,&ghostDown,&ghostUp},
+    {"21",13,12,23,141,224,44,0,&ghostDown,&ghostUp},
 
-    {"22",99,13,23,141,0,0,&heartDown,&heartUp},
+    {"22",99,13,23,141,0,0,0,&heartDown,&heartUp},
 
-    {"23",99,14,23,141,0,0,&noteDown,&noteUp},
+    {"23",99,14,23,141,0,0,0,&noteDown,&noteUp},
 
     {"1J",237,50},
     {"1K",238,51},

@@ -49,6 +49,17 @@ int getBossPhase(int group){
 	}
 }
 
+int getHurtID(int hurt){
+	switch (hurt)
+	{
+		case 20: return 36;
+		case 30: return 37;
+		case 40: return 38;
+		case 50: return 39;
+		default: return 41;
+	}
+}
+
 int getSceneGroup(std::string scene){
     if (scene=="scene_01") return 239;
     if (scene=="scene_02") return 240;
@@ -304,6 +315,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = thisNote.enter+((daSpeed+(daY*3)))-1;
 		int curPathway = thisNote.bossAction+((daSpeed+(daY*3)))-1;
+		int curHurt = getHurtID(thisNote.hurt);
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -313,6 +325,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{5,5,(daY==0)?66:67,0},
 			{6,6,(daY==0)?99:97,0},
 			{7,7,curEnter,0},
+			{8,8,curHurt,0},
 			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
@@ -382,6 +395,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curPos = thisNote.pos+(daSpeed-1);
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
+		int curHurt = getHurtID(thisNote.hurt);
 
 		std::vector<ChanceObject> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
@@ -391,6 +405,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{5,5,(daY==0)?66:67,0},
 			{6,6,(daY==0)?99:97,0},
 			{7,7,curEnter,0},
+			{8,8,curHurt,0},
 			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};
@@ -418,7 +433,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
 			{4,4,curPathway,0},
-			{5,5,(daY==0)?66:67,0},
+			{5,5,(daY==0)?412:413,0},
 			{6,6,(daY==0)?99:97,0},
 			{7,7,(daY==0)?32:33,0},
 			{8,8,noteObject->groups[noteObject->index].center,0},
@@ -500,6 +515,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 		int additional = 0;
+		int curHurt = getHurtID(thisNote.hurt);
 
 		if (thisNote.noteType==15){
 			if (curBossPhase<1){
@@ -523,6 +539,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{5,5,(daY==0)?81:80,0},
 			{6,6,additional,0},
 			{7,7,curEnter,0},
+			{8,8,curHurt,0},
 			{17,17,curSpeed,0}
 		};
 
@@ -542,10 +559,20 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curPos = thisNote.pos+(daSpeed-1);
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
+		int curHurt = getHurtID(thisNote.hurt);
+		int indexing = (daY==0)?66:67;
 
 		if (thisNote.noteType==6){
 			curPathway = 0;
 			curEnter = thisNote.enter+((daSpeed+(daY*3)))-1;
+		}
+
+		if (thisNote.noteType==8){
+			indexing = (daY==0)?414:415;
+		}
+
+		if (thisNote.noteType==12){
+			indexing = (daY==0)?412:413;
 		}
 
 		std::vector<ChanceObject> thisRemap = {
@@ -553,9 +580,10 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
 			{4,4,curPathway,0},
-			{5,5,(daY==0)?66:67,0},
+			{5,5,indexing,0},
 			{6,6,(daY==0)?99:97,0},
 			{7,7,curEnter,0},
+			{8,8,curHurt,0},
 			{17,17,curSpeed,0},
 			{41,41,thisNote.sound,0}
 		};

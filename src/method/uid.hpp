@@ -14,6 +14,7 @@ struct note_data{
     int speed; // speed 1-2-3
     int enter; // enter animation
     int sound; // sound to play
+    int hurt;
     objectsData* objDown; // pointer to which groups of obecsjt
     objectsData* objUp;
     objectsData* endNoteDown; // for hold notes
