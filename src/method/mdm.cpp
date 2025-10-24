@@ -321,6 +321,7 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                         getScene(note)
                     };
                     scenechanges.push_back(thisnote);
+                    tempnotes.push_back(thisnote);
                 }else{
                     notestruct thisnote ={
                         note,
