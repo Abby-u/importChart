@@ -135,7 +135,7 @@ void findUnusedObject(objectsData* daObjects, double theX, double theDur){
 }
 
 void setInitScene(std::string scene){
-	log::info("{}.",scene);
+	// log::info("{}.",scene);
 	auto ui = GameManager::sharedState()->getEditorLayer()->m_editorUI;
 	auto obj = ui->createObject(spawnID,{0,(float)Ypos});
 	auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
@@ -200,8 +200,6 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 	}else{
 		return;
 	}
-
-	// log::info("{}",daX);
 
 	note_data thisNote = getNoteData(ibms_id);
 

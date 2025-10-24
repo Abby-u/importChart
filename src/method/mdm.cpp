@@ -117,14 +117,14 @@ void setBPMchnages(){
         for (int j=0;j<tempnotes.size();j++){
             if (tempnotes[j].time+tempnotes[j].duration>bpmchanges[i].time){
                 tempnotes[j].time = (tempnotes[j].time*ratio)+offset;
-                double duratio = 1-((std::clamp(bpmchanges[i].time,tempnotes[i].time,tempnotes[i].time+tempnotes[i].duration)-tempnotes[i].time)/tempnotes[i].duration);
-                tempnotes[i].duration *= (ratio*duratio);
+                if (tempnotes[j].duration>0){
+                    double duratio = 1-((std::clamp(bpmchanges[i].time,tempnotes[j].time,tempnotes[j].time+tempnotes[j].duration)-tempnotes[j].time)/tempnotes[j].duration);
+                    tempnotes[j].duration *= (ratio*duratio);  
+                }
             }
         }
-        for (int j=0;j<bpmchanges.size();j++){
-            if (bpmchanges[j].time>bpmchanges[i].time){
-                bpmchanges[j].time = (bpmchanges[j].time*ratio)+offset;
-            }
+        for (int j=i;j<bpmchanges.size();j++){
+            bpmchanges[j].time = (bpmchanges[j].time*ratio)+offset;
         }
         thisbpm = bpmchanges[i].duration;
     }
@@ -217,13 +217,15 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                 double ratio = static_cast<double>(i)/static_cast<double>(bms.size()-1);
                 double temptime = (ratio+beat)*(timeperbeat*4);//time
                 if (lane=="08"){
+                    double checkbpm = getBpmValue(note);
+                    if (checkbpm<=0){continue;}
                     notestruct changebpm ={
                         lane,
                         temptime,
-                        getBpmValue(note),
+                        checkbpm,
                         0,
                         0,
-                        "w speed"
+                        "w speed❤️‍🩹"
                     };
                     bpmchanges.push_back(changebpm);
                     continue;
