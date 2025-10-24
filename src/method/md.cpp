@@ -433,7 +433,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
 			{4,4,curPathway,0},
-			{5,5,(daY==0)?412:413,0},
+			{5,5,(daY==0)?403:404,0},
 			{6,6,(daY==0)?99:97,0},
 			{7,7,(daY==0)?32:33,0},
 			{8,8,noteObject->groups[noteObject->index].center,0},
@@ -495,7 +495,8 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			{5,5,(daY==0)?90:91,0},
 			{6,6,(thisNote.speed==16)?96:(thisNote.speed==9)?97:98},
 			{7,7,curEnter,0},
-			{17,17,curSpeed,0}
+			{17,17,curSpeed,0},
+			{441,441,(thisNote.noteType==13)?440:439,0}
 		};
 
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);

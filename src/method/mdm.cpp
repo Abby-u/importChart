@@ -10,8 +10,21 @@ std::vector<notestruct> tempnotes;
 std::vector<notestruct> speedchanges;
 std::vector<notestruct> durnotes;
 std::vector<notestruct> scenechanges;
+std::vector<notestruct> bpmchanges;
+std::vector<std::pair<std::string,double>> bpmlookups;
+
+double thisbpm;
 
 using namespace geode::prelude;
+
+double getBpmValue(std::string index){
+    for (int i=0;i<bpmlookups.size();i++){
+        if (index==bpmlookups[i].first){
+            return bpmlookups[i].second;
+        }
+    }
+    return 0;
+}
 
 int getPathway(std::string lane){
     if (lane == "11"||lane == "31"||lane=="51"||lane=="D1"){
@@ -97,6 +110,26 @@ void setScenes(){
     }
 }
 
+void setBPMchnages(){
+    for (int i=0;i<bpmchanges.size();i++){
+        double ratio = thisbpm/bpmchanges[i].duration;
+        double offset = bpmchanges[i].time-(bpmchanges[i].time*ratio);
+        for (int j=0;j<tempnotes.size();j++){
+            if (tempnotes[j].time+tempnotes[j].duration>bpmchanges[i].time){
+                tempnotes[j].time = (tempnotes[j].time*ratio)+offset;
+                double duratio = 1-((std::clamp(bpmchanges[i].time,tempnotes[i].time,tempnotes[i].time+tempnotes[i].duration)-tempnotes[i].time)/tempnotes[i].duration);
+                tempnotes[i].duration *= (ratio*duratio);
+            }
+        }
+        for (int j=0;j<bpmchanges.size();j++){
+            if (bpmchanges[j].time>bpmchanges[i].time){
+                bpmchanges[j].time = (bpmchanges[j].time*ratio)+offset;
+            }
+        }
+        thisbpm = bpmchanges[i].duration;
+    }
+}
+
 std::string getScene(std::string note){
     if (note=="1O") return "scene_01";
     if (note=="1P") return "scene_02";
@@ -115,7 +148,6 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
 		log::warn("editor gone??");
 		return 1;
 	}
-    double thisbpm;
 
     tempnotes.clear();
     durnotes.clear();
@@ -143,38 +175,31 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
             if (splitline.size() < 2){continue;}
             std::string key = splitline[0];
             std::string value = splitline[1];
-
-            // Correctly parse BPM lines; ensure we initialize thisbpm and timeperbeat.
             if (key == "BPM") {
-                try {
-                    thisbpm = std::stod(value);
-                    if (thisbpm > 0.0) {
-                        timeperbeat = 60.0 / thisbpm;
-                    } else {
-                        continue;
-                    }
-                } catch (const std::exception&) {
-                    continue;
-                }
+                thisbpm = std::stod(value.substr(0,4));//4 digits bpm?sure
+                timeperbeat = 60.0 / thisbpm;
+                continue;
+            }
+            if (key.length()==5&&key.substr(0,3)=="BPM"){
+                std::vector<std::string> splitline2 = utils::string::split(line, " ");
+                if (splitline.size() < 2){continue;}
+                std::string index = splitline2[0].substr(3,2);
+                double bpm = std::stod(splitline[1].substr(0,4));
+                std::pair<std::string,double> bpmchange = {
+                    index,
+                    bpm
+                };
+                bpmlookups.push_back(bpmchange);
                 continue;
             }
             if (key == "PLAYER") {
-                try {
-                    curspeed = std::stoi(value);
-                } catch (const std::exception&) {
-                    continue;
-                }
+                curspeed = std::stoi(value.substr(0,1));
                 continue;
             }
             if (key == "GENRE") {
-                try {
-                    curscene = value.substr(0,8);
-                } catch (const std::exception&) {
-                    continue;
-                }
+                curscene = value.substr(0,8);
                 continue;
             }
-
         }else if (line.find(':')){
             std::vector<std::string> splitline = utils::string::split(line,":");
             if (splitline.size() < 2){continue;}
@@ -184,7 +209,6 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
             std::string lane = beatnlane.substr(3,2);
             int pathway = getPathway(lane);//pathway
             for (int i=0;i<bms.size();i=i+2){
-                // log::info("145");
                 std::string note = bms.substr(i,2);//ibms id
                 if (note=="00"){
                     continue;
@@ -192,7 +216,18 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                 double thisdur = 0.0;
                 double ratio = static_cast<double>(i)/static_cast<double>(bms.size()-1);
                 double temptime = (ratio+beat)*(timeperbeat*4);//time
-                // log::info("{} {} {} {}",temptime,i,bms.size()-1,ratio);
+                if (lane=="08"){
+                    notestruct changebpm ={
+                        lane,
+                        temptime,
+                        getBpmValue(note),
+                        0,
+                        0,
+                        "w speed"
+                    };
+                    bpmchanges.push_back(changebpm);
+                    continue;
+                }
                 if (note=="0F"||note=="0G"||note=="16"||note=="17"){
                     if (lane.substr(0,1)=="1"||lane.substr(0,1)=="D"){
                         notestruct thisnote ={
@@ -239,13 +274,11 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
                     }else if("0U"<=note&&note<="0W"){
                         changePathInt = 1;
                     }
-                    //man
                     if (note=="0P"||note=="0S"||note=="0V"){
                         thespeed = 2;
                     }else if(note=="0Q"||note=="0T"||note=="0W"){
                         thespeed = 3;
                     }
-
                     if (changePathInt==-1){
                         notestruct thisnoteup ={
                             note,
@@ -311,12 +344,20 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
     });
     setSpeeds();
     setScenes();
+    setBPMchnages();
     head thismdm = {
         thisbpm,
         curscene,
         tempnotes
     };
     int res = MDchart(GameManager::sharedState()->getEditorLayer(),nullptr,thismdm);
-
+    tempnotes.clear();
+    speedchanges.clear();
+    durnotes.clear();
+    scenechanges.clear();
+    bpmchanges.clear();
+    bpmlookups.clear();
+    rawdata.clear();
+    stream.clear();
     return res;
 }

@@ -4,7 +4,7 @@
 struct notestruct {
     std::string ibms_id;
     double time;
-    double duration;
+    double duration;//or bpm
     int pathway;
     int speed;
     std::string scene;
