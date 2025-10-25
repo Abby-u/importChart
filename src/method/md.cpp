@@ -180,10 +180,10 @@ void setInitScene(std::string scene){
 void checkBossPhase(int targetPhase, double time, bool withoffset = true, bool forcechange = false, int group = 0, bool bossExit = false){
 	auto ui = GameManager::sharedState()->getEditorLayer()->m_editorUI;
 	if (curBossPhase!=targetPhase||forcechange==true){
-		if (targetPhase>1&&curBossPhase==-1){
-			checkBossPhase(targetPhase-1,time-0.5);
-		}else if (targetPhase==-1&&curBossPhase>1){
-			checkBossPhase(targetPhase+1,time-0.5);
+		if (targetPhase>0&&curBossPhase==-1){
+			checkBossPhase(0,time-0.5);
+		}else if (targetPhase==-1&&curBossPhase>0){
+			checkBossPhase(0,time-0.5);
 		}
 		if (std::abs(targetPhase-curBossPhase)<=2&&(targetPhase>-1||curBossPhase>-1||forcechange==true)){
 			double thisoffset = (withoffset==true)?noteOffset:0;
