@@ -26,6 +26,7 @@ int pickupID = 1817;
 int areaScaleID = 3008; //lol
 int itemEditID = 3619;
 
+unsigned int songLengthInt = 0;
 double daTime = 0;
 double bpm = 120;
 double scroll = 1.0;
@@ -35,6 +36,8 @@ matjson::Value thefilepaths;
 std::optional<file::Unzip> theunzip;
 FMOD::Sound* demo;
 FMOD::Channel* demochannel;
+FMOD::Sound* music;
+FMOD::Channel* musicchannel;
 
 bool checkFile(std::filesystem::path thepath){
 	std::ifstream file(thepath);
@@ -286,10 +289,21 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 				}else if (std::filesystem::path(pathValue.asString().unwrap()).stem().string().substr(
 					std::filesystem::path(pathValue.asString().unwrap()).stem().string().size()-5
 				)=="music"){
-					
 					auto result = geode::utils::clipboard::write(pathValue.asString().unwrap());
-					if (result){
-						notif("Copied song directory","GJ_infoIcon_001.png");
+					if (!result){continue;}
+					notif("Copied song directory","GJ_infoIcon_001.png");
+					music->release();
+					music = nullptr;
+					FMOD_RESULT musicsound = FMODAudioEngine::sharedEngine()->m_system->createSound(pathValue.asString().unwrap().c_str(),FMOD_CREATESTREAM,nullptr,&music);
+					if (musicsound == FMOD_OK){
+						FMOD_RESULT reult = music->getLength(&songLengthInt,FMOD_TIMEUNIT_MS);
+						if (reult == FMOD_OK){
+							log::info("song length :{}",songLengthInt);
+						}else{
+							log::warn("cant get song length");
+						}
+					}else{
+						log::warn("cant create audiostream");
 					}
 				}
 				else if (std::filesystem::path(pathValue.asString().unwrap()).stem().string().substr(
@@ -448,10 +462,20 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 					auto res = utills::file::writeBinary(thesongpath,rawbyte);
 					if (res.isOk()){
 						auto result = geode::utils::clipboard::write(utils::string::wideToUtf8(thesongpath));
-						if (result){
-							notif("Copied song directory","GJ_infoIcon_001.png");
+						if (!result){continue;}
+						notif("Copied song directory","GJ_infoIcon_001.png");
+						music->release();
+						music = nullptr;
+						FMOD_RESULT musicsound = FMODAudioEngine::sharedEngine()->m_system->createSound(utils::string::wideToUtf8(thesongpath.wstring()).c_str(),FMOD_CREATESTREAM,nullptr,&music);
+						if (musicsound == FMOD_OK){
+							FMOD_RESULT reult = music->getLength(&songLengthInt,FMOD_TIMEUNIT_MS);
+							if (reult == FMOD_OK){
+								log::info("song length :{}",songLengthInt);
+							}else{
+								log::warn("cant get song length");
+							}
 						}else{
-							log::warn("cant write to clipboard");
+							log::warn("cant create audiostream");
 						}
 					}else{
 						log::warn("cant extract music ogg");

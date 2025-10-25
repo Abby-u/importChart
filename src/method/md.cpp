@@ -9,6 +9,8 @@
 
 using namespace geode::prelude;
 
+std::vector<GameObject*> thistriggers;
+
 bool overflow = false;
 std::vector<int> overflowObjects;
 
@@ -16,7 +18,37 @@ std::optional<double> lastFlashTime;
 std::optional<CCPoint> lastFlashPos;
 bool flashStart = false;
 
+double lastnotetime = 0;
+
 int curBossPhase = -1;
+int linkGroup = 467;
+
+void getLastNotejson(std::vector<matjson::Value> notes){
+	for (const auto& [i, note]:notes){
+		double time = note["config"]["time"].asDouble().unwrap();
+		double dur = note["config"]["length"].asDouble().unwrap();
+		if (time+dur>lastnotetime){
+			lastnotetime=time+dur;
+		}
+	}
+	double thissonglength = songLengthInt;
+	thissonglength = thissonglength/1000;//is this even working
+	if (thissonglength>lastnotetime){lastnotetime=thissonglength;}
+}
+
+void getLastNotemdm(std::vector<notestruct> notes){
+	for (const auto& note:notes){
+		double time = note.time;
+		double dur = note.duration;
+		if (time+dur>lastnotetime){
+			lastnotetime=time+dur;
+		}
+	}
+	// log::info("from getlastnote: {}",lastnotetime);
+	double thissonglength = songLengthInt;
+	thissonglength = thissonglength/1000;
+	if (thissonglength>lastnotetime){lastnotetime=thissonglength;}
+}
 
 note_data getNoteData(std::string daUid){
 	std::string thisUid = daUid;
@@ -142,6 +174,7 @@ void setInitScene(std::string scene){
 	if (trigger){
 		trigger->m_targetGroupID = getSceneGroup(scene);
 	}
+	obj->m_linkedGroup = linkGroup;
 }
 
 void checkBossPhase(int targetPhase, double time, bool withoffset = true, bool forcechange = false, int group = 0, bool bossExit = false){
@@ -167,10 +200,36 @@ void checkBossPhase(int targetPhase, double time, bool withoffset = true, bool f
 			if (bossExit==true){
 				curBossPhase = -1;
 			}
+			obj->m_linkedGroup = linkGroup;
 			return;
 		}
 		return;
 	}
+}
+
+void initduration(LevelEditorLayer* editor){
+	auto ui = editor->m_editorUI;
+	log::info("{}",lastnotetime);
+	double objX = (lastnotetime*(grid/timepergrid))+Xpos;
+	double objY = Ypos;
+	CCPoint pos = {(float)objX,(float)objY};
+	auto obj = ui->createObject(spawnID,pos);
+	auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
+	if (trigger){
+		trigger->m_targetGroupID = 486;
+	}
+	obj->m_linkedGroup=linkGroup;
+	// checkBossPhase(-1,lastnotetime+1,false,false,0,true);
+
+	CCPoint pos1 = {(float)Xpos,(float)Ypos-(1*grid)};
+	auto obj1 = ui->createObject(901,pos1);
+	auto trigger1 = static_cast<EffectGameObject*>(obj1);
+	if (trigger1){
+		trigger1->m_targetGroupID = 488;
+		trigger1->m_duration = (float)lastnotetime;
+		trigger1->m_moveOffset = CCPoint(570,0);
+	}
+	obj1->m_linkedGroup=linkGroup;
 }
 
 void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruct mdmnote = notestruct()){
@@ -214,6 +273,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 	double objY = ((daY*grid)+Ypos);
 	CCPoint pos = {(float)objX,(float)objY};
 	auto obj = ui->createObject(spawnID,pos);
+	obj->m_linkedGroup=linkGroup;
 
 	if (thisNote.noteType>=50&&thisNote.spawnGroup!=0){// events & effects
 		if (thisNote.noteType==62){//flash
@@ -231,6 +291,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 					lastFlashTime = daX;
 				}
 				auto color = ui->createObject(899,lastFlashPos.value());
+				color->m_linkedGroup=linkGroup;
 				auto colort = static_cast<EffectGameObject*>(color);
 				if (colort){
 					colort->m_opacity = 1.0f;
@@ -242,6 +303,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 				flashStart = false;
 			}else if (ibms_id=="2K"){
 				auto color = ui->createObject(899,lastFlashPos.value());
+				color->m_linkedGroup=linkGroup;
 				auto colort = static_cast<EffectGameObject*>(color);
 				if (colort){
 					colort->m_opacity = 0.0f;
@@ -373,6 +435,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		}
 
 		auto itemedit= ui->createObject(itemEditID,pos);
+		itemedit->m_linkedGroup=linkGroup;
 
 		auto trigger0 = static_cast<ItemTriggerGameObject*>(itemedit);
 		if (trigger0){
@@ -449,6 +512,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		}
 
 		auto itemedit= ui->createObject(itemEditID,pos);
+		itemedit->m_linkedGroup=linkGroup;
 
 		auto trigger0 = static_cast<ItemTriggerGameObject*>(itemedit);
 		if (trigger0){
@@ -462,6 +526,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		double objY2 = ((daY*grid)+Ypos);
 		CCPoint pos2 = {(float)objX2,(float)objY2};
 		auto obj2 = ui->createObject(spawnID,pos2);
+		obj2->m_linkedGroup=linkGroup;
 
 		std::vector<ChanceObject> secondRemap = {
 			{1,1,secondObjects->groups[noteObject->index].group,0}
@@ -609,19 +674,24 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data = nullptr, head mdmdat
     Xpos = 0.0;
     noteOffset = (1.451/0.09628343)*-1;
     daTime = 0;
+	lastnotetime = 0;
+	curBossPhase = -1;
 	std::string curscene;
 	if (data!=nullptr){
 		bpm = data["bpm"].asDouble().unwrap();
 		curscene = data["scene"].asString().unwrap();
+		getLastNotejson(data["notes"].asArray().unwrap());
 	}else if (!mdmdata.notes.empty()){
 		bpm = mdmdata.bpm;
 		curscene = mdmdata.stage;
+		getLastNotemdm(mdmdata.notes);
 	}else{
 		log::warn("none");
 		return 1;
 	}
 	overflow = false;
 	overflowObjects.clear();
+	thistriggers.clear();
 	resetObjectsData();
 	auto ui = editor->m_editorUI;
 	auto objects = ui->getSelectedObjects();
@@ -648,6 +718,7 @@ int MDchart(LevelEditorLayer* editor, matjson::Value data = nullptr, head mdmdat
 			addNoteMD(editor,nullptr,b);
 		}
 	}
+	initduration(editor);
 	auto root = CCDirector::sharedDirector()->getRunningScene();
 	root->removeChildByID("mdPopup");
 	root->removeChildByID("mdmPopup");

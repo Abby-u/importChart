@@ -12,6 +12,7 @@ extern int areaScaleID;
 extern int itemEditID;
 
 extern double daTime;
+extern unsigned int songLengthInt;
 extern double bpm;
 extern double scroll;
 extern int beat;
