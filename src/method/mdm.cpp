@@ -210,7 +210,7 @@ int mdmChart(LevelEditorLayer* editor, std::string rawdata){
             int pathway = getPathway(lane);//pathway
             for (int i=0;i<bms.size();i=i+2){
                 std::string note = bms.substr(i,2);//ibms id
-                if (note=="00"){
+                if (note=="00"||note.size()!=2){//doublecheck empty note
                     continue;
                 }
                 double thisdur = 0.0;

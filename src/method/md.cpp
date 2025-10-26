@@ -32,7 +32,7 @@ void getLastNotejson(std::vector<matjson::Value> notes){
 		}
 	}
 	double thissonglength = songLengthInt;
-	thissonglength = thissonglength/1000;//is this even working
+	thissonglength = (thissonglength/1000)-3;//ok this is working
 	if (thissonglength>lastnotetime){lastnotetime=thissonglength;}
 }
 
@@ -46,7 +46,7 @@ void getLastNotemdm(std::vector<notestruct> notes){
 	}
 	// log::info("from getlastnote: {}",lastnotetime);
 	double thissonglength = songLengthInt;
-	thissonglength = thissonglength/1000;
+	thissonglength = (thissonglength/1000)-3;
 	if (thissonglength>lastnotetime){lastnotetime=thissonglength;}
 }
 
