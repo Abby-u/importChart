@@ -32,6 +32,8 @@ extern objectsData raiderUp;
 extern objectsData raiderDown;
 extern objectsData hammerUp;
 extern objectsData hammerDown;
+extern objectsData hammerFlipUp;
+extern objectsData hammerFlipDown;
 extern objectsData geminiUp;
 extern objectsData geminiDown;
 extern objectsData holdUp;

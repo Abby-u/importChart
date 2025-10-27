@@ -47,8 +47,8 @@ std::vector<note_data> note_uids = {
 
     {"0H",84,11,23,141,0,0,30,&gearDown,&gearUp},
 
-    // {"0I",} upside down raider not planned
-    // {"0J",} same as hammer
+    {"0I",144,7,502,158,496,44,40,&hammerFlipDown,&hammerFlipUp},
+    {"0J",13,6,505,164,514,43,30,&raiderDown,&raiderUp},
 
     {"11",369,16,23,141,372,45,50,&bossMelee},
     {"12",369,17,23,141,373,45,50,&bossMelee},
@@ -56,10 +56,10 @@ std::vector<note_data> note_uids = {
     {"14",317,13,23,141,331,44,30,&bossProjectile2Down,&bossProjectile2Up,nullptr,nullptr,343},
     {"15",317,14,23,141,331,44,30,&bossProjectile3Down,&bossProjectile3Up,nullptr,nullptr,343},
 
-    {"16",179,18,364,141,0,360,30,&bossMasher}, // temp
-    {"17",179,18,380,141,0,393,30,&bossMasherExit}, // temp
+    {"16",179,18,364,141,0,360,30,&bossMasher},
+    {"17",179,18,380,141,0,393,30,&bossMasherExit},
 
-    {"18",84,15,23,141,0,0,30,&gearDown,&gearUp}, // temp
+    {"18",84,15,23,141,0,0,30,&gearDown,&gearUp},
 
     {"1A",290,65},
     {"1B",306,65},
@@ -119,7 +119,7 @@ std::vector<note_data> note_uids = {
     {"2V",272,64},
 
 
-    // and more
+    // the rest are touhou maps, not planned
 
     /*
 

@@ -888,6 +888,50 @@ objectsData bossMasherExit = {
     }
 };
 
+objectsData hammerFlipDown = {
+    0,
+    -100,
+    {
+        {3200,3230},
+        {3201,3231},
+        {3202,3232},
+        {3203,3233},
+        {3204,3234},
+        {3205,3235},
+        {3206,3236},
+        {3207,3237},
+        {3208,3238},
+        {3209,3239},
+        {3210,3240},
+        {3211,3241},
+        {3212,3242},
+        {3213,3243},
+        {3214,3244},
+    }
+};
+
+objectsData hammerFlipUp = {
+    0,
+    -100,
+    {
+        {3215,3245},
+        {3216,3246},
+        {3217,3247},
+        {3218,3248},
+        {3219,3249},
+        {3220,3250},
+        {3221,3251},
+        {3222,3252},
+        {3223,3253},
+        {3224,3254},
+        {3225,3255},
+        {3226,3256},
+        {3227,3257},
+        {3228,3258},
+        {3229,3259},
+    }
+};
+
 void deleteLastUsed(objectsData* theobjects){
     for (int i=0;i<theobjects->groups.size();i++){
         theobjects->groups[i].dur = -100;
@@ -920,6 +964,8 @@ void resetObjectsData(){
     deleteLastUsed(&gearUp);
     deleteLastUsed(&hammerDown);
     deleteLastUsed(&hammerUp);
+    deleteLastUsed(&hammerFlipDown);
+    deleteLastUsed(&hammerFlipUp);
     deleteLastUsed(&raiderDown);
     deleteLastUsed(&raiderUp);
     deleteLastUsed(&heartDown);
