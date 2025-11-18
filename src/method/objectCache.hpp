@@ -64,6 +64,15 @@ extern objectsData heartDown;
 extern objectsData noteUp;
 extern objectsData noteDown;
 
+extern objectsData bfLeft;
+extern objectsData bfDown;
+extern objectsData bfUp;
+extern objectsData bfRight;
+extern objectsData dadLeft;
+extern objectsData dadDown;
+extern objectsData dadUp;
+extern objectsData dadRight;
+
 void resetObjectsData();
 
 #endif

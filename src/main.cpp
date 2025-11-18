@@ -141,7 +141,6 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 	struct Fields {
 		EventListener<extractTask> m_extractListener;
-		
 	};
 	
 	class optionPopup : public geode::Popup<std::string const&>{//taken from docs
@@ -658,16 +657,6 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 		if (objects->count()<0){return;}
 		for (int i=0;i<objects->count();i++){
 			auto object = static_cast<GameObject*>(objects->objectAtIndex(i));
-			// if (object->m_objectID==1268){
-			// 	auto remaps = static_cast<SpawnTriggerGameObject*>(object)->m_remapObjects;
-			// 	auto keys = static_cast<SpawnTriggerGameObject*>(object)->m_remapKeys;
-			// 	for (auto thej = remaps.begin(); thej != remaps.end(); ++thej){
-			// 		log::info("object remaps: {} {} {} {}",thej->m_groupID,thej->m_oldGroupID,thej->m_chance,thej->m_unk00c);
-			// 	}
-			// 	for (auto thej2 = keys.begin(); thej2 != keys.end(); ++thej2){
-			// 		log::info("key remaps: {}",*thej2);
-			// 	}
-			// }
 			log::info("{}",object->m_linkedGroup);
 		}
 	}
@@ -744,12 +733,24 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 				log::info("nvm");
 				return;
 			}
+			if (file->isErr()){
+				log::warn("eror wow: {}",file->unwrapErr());
+				return;
+			}
 			auto filePath = file->unwrap();
-			std::string ext = (filePath.has_extension())?filePath.extension().string() : "";
+			std::string ext = (filePath.has_extension())?filePath.extension().string():"";
 			// log::info("{}",ext);
 			auto editor = GameManager::sharedState()->getEditorLayer();
 			if (ext == ".json"){
-				fnfChart(editor,utils::file::readJson(filePath).unwrap());
+				// fnfChart(editor,utils::file::readJson(filePath).unwrap());
+				auto red = file::readJson(filePath);
+				if (red.isErr()){
+					log::warn("somethings wrong in fnf red: {}",red.unwrapErr());
+					return;
+				}
+				auto root = CCDirector::sharedDirector()->getRunningScene();
+				root->removeChildByID("importChartPopup");
+				initFnf(red.unwrap());
 			} else {
 				FLAlertLayer::create("Invalid File Type", "This file isnt supported.", "OK")->show();
 				log::warn("this aint supported");

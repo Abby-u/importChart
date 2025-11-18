@@ -29,3 +29,12 @@ void notif(std::string themsg, std::string icon, float time){
 	auto deicon = CCSprite::createWithSpriteFrameName(icon.c_str());
 	geode::Notification::create(themsg,deicon,time)->show();
 }
+
+//why they change ChanceObject
+std::vector<ChanceObject> rempaFromTuple(std::vector<std::tuple<int,int,int,int>> vector){
+	std::vector<ChanceObject> the;
+	for (auto& vec : vector){
+		the.emplace_back(std::get<0>(vec),std::get<2>(vec));
+	}
+	return the;
+};

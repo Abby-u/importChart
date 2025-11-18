@@ -15,6 +15,7 @@
 // double bpm;
 // double scroll;
 // int beat;
+using namespace geode::prelude;
 
 std::string getHighestDiff(matjson::Value data);
 
@@ -45,5 +46,7 @@ void addBPMChanger(LevelEditorLayer* editor, double daX, double daY, bool early)
 void addScrollSpeed(LevelEditorLayer* editor, double daX, double daY, double daScroll,double daDur,bool early);
 
 void fnfChart(LevelEditorLayer* editor,matjson::Value data);
+
+int initFnf(matjson::Value data);
 
 #endif

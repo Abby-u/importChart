@@ -344,7 +344,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			checkBossPhase(0,daX+0.2255);
 		}
 		
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -359,7 +359,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
@@ -377,7 +377,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curPathway = thisNote.bossAction+((daSpeed+(daY*3)))-1;
 		int curHurt = getHurtID(thisNote.hurt);
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -393,7 +393,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
@@ -417,7 +417,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			bossKnock = thisNote.pos;
 		}
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -431,7 +431,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 
 		auto itemedit= ui->createObject(itemEditID,pos);
@@ -458,7 +458,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 		int curHurt = getHurtID(thisNote.hurt);
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -474,7 +474,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
@@ -489,7 +489,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -508,7 +508,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 
 		auto itemedit= ui->createObject(itemEditID,pos);
@@ -528,14 +528,14 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto obj2 = ui->createObject(spawnID,pos2);
 		obj2->m_linkedGroup=linkGroup;
 
-		std::vector<ChanceObject> secondRemap = {
+		std::vector<std::tuple<int,int,int,int>> secondRemap = {
 			{1,1,secondObjects->groups[noteObject->index].group,0}
 		};
 
 		auto trigger2 = static_cast<SpawnTriggerGameObject*>(obj2);
 		if (trigger2){
 			trigger2->m_targetGroupID = curSpeed;
-			trigger2->m_remapObjects = secondRemap;
+			trigger2->m_remapObjects = rempaFromTuple(secondRemap);
 		}
 
 		return;
@@ -550,13 +550,13 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		int curSpeed = thisNote.speed+(daSpeed-1);
 		int curEnter = (thisNote.enter>0)?thisNote.enter+(daSpeed-1):0;
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
 			{4,4,curPathway,0},
 			{5,5,(daY==0)?90:91,0},
-			{6,6,(thisNote.speed==16)?96:(thisNote.speed==9)?97:98},
+			{6,6,(thisNote.speed==16)?96:(thisNote.speed==9)?97:98,0},
 			{7,7,curEnter,0},
 			{17,17,curSpeed,0},
 			{441,441,(thisNote.noteType==13)?440:439,0}
@@ -565,7 +565,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
@@ -595,7 +595,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			curPathway = 0;
 		}
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -610,7 +610,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
@@ -639,7 +639,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 			indexing = (daY==0)?412:413;
 		}
 
-		std::vector<ChanceObject> thisRemap = {
+		std::vector<std::tuple<int,int,int,int>> thisRemap = {
 			{1,1,noteObject->groups[noteObject->index].group,0},
 			{2,2,curPos,0},
 			{3,3,noteObject->groups[noteObject->index].center,0},
@@ -655,7 +655,7 @@ void addNoteMD(LevelEditorLayer* editor,matjson::Value data = nullptr, notestruc
 		auto trigger = static_cast<SpawnTriggerGameObject*>(obj);
 		if (trigger){
 			trigger->m_targetGroupID = thisNote.spawnGroup;
-			trigger->m_remapObjects = thisRemap;
+			trigger->m_remapObjects = rempaFromTuple(thisRemap);
 		}
 		return;
 	}
