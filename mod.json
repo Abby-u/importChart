@@ -1,19 +1,14 @@
 {
 	"geode": "4.9.0",
 	"gd": {
-		"win": "2.2074"
+		"win": "2.2074",
+		"android": "2.2074"
 	},
 	"id": "aldora.importchart",
 	"name": "Import Chart",
 	"version": "v1.0.0",
 	"developer": "aldora",
 	"description": "chart importer",
-	"dependencies":{
-		"fleym.nongd": {
-			"version": ">=1.0.0",
-			"importance": "suggested"
-		}
-	},
 	"settings": {
 		"fnf-title": {
 			"type": "title",
