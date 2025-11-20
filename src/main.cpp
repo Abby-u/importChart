@@ -16,6 +16,14 @@
 
 using namespace geode::prelude;
 
+bool droid = false;
+
+#if defined(GEODE_IS_ANDROID)
+
+droid=true;
+
+#endif
+
 int grid = 30;
 double timepergrid = 0.09628343;
 double Ypos = 5025.0;
@@ -198,7 +206,8 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 			// mdmButton->setColor(grey);
 
 			auto file = Mod::get()->getSettingValue<std::filesystem::path>("md-extractor-path");
-			if (!checkFile(file)){
+
+			if (!checkFile(file)||droid){
 				
 				daMd->setEnabled(false);
 				mdButton->setCascadeColorEnabled(true);
@@ -797,6 +806,9 @@ class $modify(editedPauseLayer,EditorPauseLayer) {
 
 
 	void pickNRunPipe(CCObject* obj){
+		if (droid){
+			return;
+		}
 		utils::file::pick(utils::file::PickMode::OpenFile,{}).listen([this](geode::Result<std::filesystem::path, std::string>* file){
 			if (!file){
 				log::info("nvm");

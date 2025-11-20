@@ -348,10 +348,10 @@ protected:
 			cursec=thissong.sections.size();
 		}
 		previewseektime=thissong.sections[cursec].time+0.0001;
-		if (inst!=nullptr&&instchannel){
+		if (inst!=nullptr&&instchannel&&previewPlaying){
 			FMOD_RESULT setpos = instchannel->setPosition(static_cast<unsigned int>(previewseektime*1000),FMOD_TIMEUNIT_MS);
 		}
-		if (voices!=nullptr&&voiceschannel){
+		if (voices!=nullptr&&voiceschannel&&previewPlaying){
 			FMOD_RESULT setpos = voiceschannel->setPosition(static_cast<unsigned int>(previewseektime*1000),FMOD_TIMEUNIT_MS);
 		}
 	}
